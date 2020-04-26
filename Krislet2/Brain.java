@@ -15,18 +15,18 @@ class Brain extends Thread implements SensorInput
 	// This constructor:
 	// - stores connection to krislet
 	// - starts thread for this object
-	public Brain(SendCommand krislet, String team, 
-							char side, int number, String playMode)
+	public Brain(SendCommand krislet)
 	{
 		m_timeOver = false;
 		m_krislet = krislet;
 		m_memory = new Memory();
 //		m_team = team;
-		m_side = side;
+//		m_side = side;
 //		m_number = number;
 //		m_playMode = playMode;
 		start();
 	}
+
 
 
 	//---------------------------------------------------------------------------
@@ -49,6 +49,13 @@ class Brain extends Thread implements SensorInput
 	//	we waits one simulator steps. (This of course should be done better)
 	public void run()
 	{
+		m_krislet.moveObject("player team1 1", -10, 0);
+
+		m_krislet.moveObject("player team1 2", 20, 10);
+
+		m_krislet.moveObject("player Poland 1", 20, 8);
+
+		/*
 		ObjectInfo object;
 
 		// first put it somewhere on my side
@@ -96,6 +103,7 @@ class Brain extends Thread implements SensorInput
 			}catch(Exception e){}
 		}
 
+		 */
 	}
 
 

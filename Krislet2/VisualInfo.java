@@ -87,10 +87,18 @@ class VisualInfo
 		{
 			m_tokenizer.nextToken();	// '('
       		// Don't parse information if it's not 'see' information
-			if( m_tokenizer.nextToken().compareTo("see") != 0 )
+			if( m_tokenizer.nextToken().compareTo("ok") != 0 )
 				return;
 
-			m_tokenizer.nextToken();	// ' '
+			token = m_tokenizer.nextToken();	// ' '
+			//System.out.println(token + "= space");
+
+			token = m_tokenizer.nextToken();	// 'listen'
+			//System.out.println(token + "= look");
+
+			token = m_tokenizer.nextToken();    // ' '
+			//System.out.println(token + "= space");
+
 			m_time = Integer.parseInt( m_tokenizer.nextToken() ); // TIME
 			m_tokenizer.nextToken();	// ' '
 			token = m_tokenizer.nextToken();

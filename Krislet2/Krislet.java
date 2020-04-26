@@ -43,7 +43,7 @@ class Krislet implements SendCommand
 		throws SocketException, IOException
 	{
 	String	hostName = new String("");
-	int			port = 6000;
+	int			port = 6001;
 	String	team = new String("Poland");
 
 		try
@@ -132,8 +132,10 @@ class Krislet implements SendCommand
 
 		// Now we should be connected to the server
 		// and we know side, player number and play mode
-		while( true )
+		while( true ){
+			send("(look)");
 			parseSensorInformation(receive());
+		}
 	}
 
 
@@ -187,12 +189,17 @@ class Krislet implements SendCommand
 		send("(change_view " + angle + " " + quality + ")");
 	}
 
+	public void moveObject(String object, int x, int y){
+		send("(move (" + object + ") " + x + " " + y + ")");
+	}
+
 	//---------------------------------------------------------------------------
 	// This function parses initial message from the server
 	protected void parseInitCommand(String message)	throws IOException
 	{
+
 		StringTokenizer	tokenizer = new StringTokenizer(message,"() ");
-		
+
 		// We need init token
 		if( tokenizer.nextToken().compareTo("init") != 0)
 		{
@@ -200,11 +207,9 @@ class Krislet implements SendCommand
 		}
 
 		// initialize player's brain
-		m_brain = new Brain(this, 
-												m_team, 
-												tokenizer.nextToken().charAt(0), 
-												Integer.parseInt(tokenizer.nextToken()),
-												tokenizer.nextToken());
+
+		m_brain = new Brain(this);
+
 	}
 
 
@@ -215,13 +220,14 @@ class Krislet implements SendCommand
 	// This function sends initialization command to the server
 	private void init()
 	{
-                send("(init " + m_team + ")");
+		send("(init " + m_team + ")");
 	}
 
 	//---------------------------------------------------------------------------
 	// This function parses sensor information
 	private void parseSensorInformation(String message)
 	{
+		/*
 		// First check kind of information		
 		if( message.charAt(1) == 's' && message.charAt(3) == 'e')
 		{
@@ -231,6 +237,14 @@ class Krislet implements SendCommand
 		}
 		else if( message.charAt(1) == 'h' )
 			parseHear(message);
+
+		 */
+		//check for 'ok listen'
+		if(message.charAt(1) == 'o' && message.charAt(2) == 'k' && message.charAt(4) == 'l'){
+			VisualInfo info = new VisualInfo(message);
+			info.parse();
+			m_brain.see(info);
+		}
 	}
 
 
@@ -256,7 +270,7 @@ class Krislet implements SendCommand
 
 	//---------------------------------------------------------------------------
 	// This function sends via socket message to the server
-	private void send(String message)
+	public void send(String message)
 	{
 		byte[] buffer = new byte[MSG_SIZE];
 		message.getBytes(0, message.length(), buffer, 0);

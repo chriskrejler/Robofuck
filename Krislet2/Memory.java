@@ -18,7 +18,9 @@ class Memory
 	// This function puts see information into our memory
 	public void store(VisualInfo info)
 	{
-		m_info = info;
+		if(info != null) {
+			m_info = info;
+		}
 	}
 
 	//---------------------------------------------------------------------------
