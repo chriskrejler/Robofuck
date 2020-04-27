@@ -11,6 +11,7 @@ import java.util.StringTokenizer;
 
 class Brain extends Thread implements SensorInput
 {
+	States.gameState gameState = States.gameState.BEFORE_KICKOFF;
 	//---------------------------------------------------------------------------
 	// This constructor:
 	// - stores connection to krislet
@@ -27,7 +28,6 @@ class Brain extends Thread implements SensorInput
 //		m_playMode = playMode;
 		start();
 	}
-
 
 	//---------------------------------------------------------------------------
 	// This is main brain function used to make decision
@@ -72,7 +72,11 @@ class Brain extends Thread implements SensorInput
 					if (object.m_direction != 0)
 						m_krislet.turn(object.m_direction);
 					else
-						m_krislet.dash((object.m_distance * object.m_distance)*100);
+						if(this.gameState != States.gameState.BEFORE_KICKOFF && this.gameState != States.gameState.GOAL_L
+						&& this.gameState != States.gameState.GOAL_R) {
+							m_krislet.dash((object.m_distance * object.m_distance) * 100);
+						}
+						else m_krislet.move( -Math.random()*52.5 , Math.random()*34.0 );
 				} else {
 					// We know where is ball and we can kick it
 					// so look for goal
@@ -105,6 +109,10 @@ class Brain extends Thread implements SensorInput
 //===========================================================================
 // Here are suporting functions for implement logic
 
+	public void setGameState(States.gameState gs){
+		gameState = gs;
+	}
+
 
 //===========================================================================
 // Implementation of SensorInput Interface
@@ -126,19 +134,79 @@ class Brain extends Thread implements SensorInput
 	//---------------------------------------------------------------------------
 	// This function receives hear information from referee
 	public void hear(int time, String message)
-	{						 /*
+	{
 		StringTokenizer tokenizer = new StringTokenizer(message,"() ", true);
 		String token;
 
 		// First is referee token and time token
-		tokenizer.nextToken();
-		tokenizer.nextToken();
-		tokenizer.nextToken();
 		token = tokenizer.nextToken();
 
-		if(token.compareTo("time_over") == 0)
-			m_timeOver = true;
-			*/
+		//set states
+		if(token.contains("goal_l_")){
+			setGameState(States.gameState.GOAL_L);
+		}
+		else if (token.contains("goal_r_")){
+			setGameState(States.gameState.GOAL_R);
+		}
+		else {
+			switch (token) {
+				case "time_over":
+					m_timeOver = true;
+					break;
+				case "kick_off_l":
+					gameState = States.gameState.KICKOFF_L;
+					break;
+				case "kick_off_r":
+					gameState = States.gameState.KICKOFF_R;
+					break;
+				case "play_on":
+					gameState = States.gameState.PLAY_ON;
+					break;
+				case "kick_in_l":
+					gameState = States.gameState.KICK_IN_L;
+					break;
+				case "kick_in_r":
+					gameState = States.gameState.KICK_IN_R;
+					break;
+				case "corner_kick_l":
+					gameState = States.gameState.CORNER_KICK_L;
+					break;
+				case "corner_kick_r":
+					gameState = States.gameState.CORNER_KICK_R;
+					break;
+				case "goal_kick_l":
+					gameState = States.gameState.GOAL_KICK_L;
+					break;
+				case "goal_kick_r":
+					gameState = States.gameState.GOAL_KICK_R;
+					break;
+				case "foul_charge_l":
+					gameState = States.gameState.FOUL_CHARGE_L;
+					break;
+				case "foul_charge_r":
+					gameState = States.gameState.FOUL_CHARGE_R;
+					break;
+				case "back_pass_l":
+					gameState = States.gameState.BACK_PASS_L;
+					break;
+				case "back_pass_r":
+					gameState = States.gameState.BACK_PASS_R;
+					break;
+				case "indirect_free_kick_l":
+					gameState = States.gameState.INDIRECT_FREE_KICK_L;
+					break;
+				case "indirect_free_kick_r":
+					gameState = States.gameState.INDIRECT_FREE_KICK_R;
+					break;
+				case "illegal_defense_l":
+					gameState = States.gameState.ILLEGAL_DEFENSE_L;
+					break;
+				case "illegal_defense_r":
+					gameState = States.gameState.ILLEGAL_DEFENSE_R;
+					break;
+			}
+		}
+
 	}
 
 
@@ -149,3 +217,4 @@ class Brain extends Thread implements SensorInput
 	private char				m_side;
 	volatile private boolean		m_timeOver;
 }
+
