@@ -12,6 +12,7 @@ import java.util.StringTokenizer;
 class Brain extends Thread implements SensorInput
 {
 	States.gameState gameState = States.gameState.BEFORE_KICKOFF;
+	BodyInfo bodyInfo = new BodyInfo();
 	//---------------------------------------------------------------------------
 	// This constructor:
 	// - stores connection to krislet
@@ -111,6 +112,29 @@ class Brain extends Thread implements SensorInput
 
 	public void setGameState(States.gameState gs){
 		gameState = gs;
+	}
+
+	public void senseBody(String message){
+		StringTokenizer	tokenizer = new StringTokenizer(message,"() ");
+		tokenizer.nextToken();
+		bodyInfo.setFrame(Integer.parseInt(tokenizer.nextToken()));
+		tokenizer.nextToken();
+		bodyInfo.setViewMode(tokenizer.nextToken() + " " + tokenizer.nextToken());
+		tokenizer.nextToken();
+		bodyInfo.setStamina(Integer.parseInt(tokenizer.nextToken()));
+		tokenizer.nextToken();
+		tokenizer.nextToken();
+		bodyInfo.setSpeed(Double.parseDouble(tokenizer.nextToken()));
+		tokenizer.nextToken();
+		bodyInfo.setKickCount(Integer.parseInt(tokenizer.nextToken()));
+		tokenizer.nextToken();
+		bodyInfo.setDashCount(Integer.parseInt(tokenizer.nextToken()));
+		tokenizer.nextToken();
+		bodyInfo.setTurnCount(Integer.parseInt(tokenizer.nextToken()));
+        tokenizer.nextToken();
+		bodyInfo.setSayCount(Integer.parseInt(tokenizer.nextToken()));
+
+		System.out.println(bodyInfo.toString());
 	}
 
 
