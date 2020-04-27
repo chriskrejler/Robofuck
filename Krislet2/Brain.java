@@ -49,46 +49,126 @@ class Brain extends Thread implements SensorInput
 	//	we waits one simulator steps. (This of course should be done better)
 	public void run()
 	{
-		ObjectInfo object;
+
+		int head_deg = 0;
+		boolean foundTeammate = false;
+		float ln_team_dist = 0;
+		float ln_team_dir = 0;
+		double team_ball_dist = 0;
 
 		// first put it somewhere on my side
+		//m_krislet.move(-Math.random() * 52.5, Math.random() * 34.0);
+		//m_krislet.move(-Math.random() * 10, Math.random() * 15);
 
-		m_krislet.move( -Math.random()*52.5 , Math.random()*34.0 );
+		m_krislet.turn(-40);
+		m_memory.waitForNewInfo();
+		//m_krislet.move(-6.35, -25.79);
+		//m_krislet.move(-19, 11);
 
-		while( !m_timeOver )
-		{
-			synchronized (this) {
-				object = m_memory.getObject("ball");
+		while (!m_timeOver) {
+			int angle = 0;
+			boolean up = true;
 
-				if (object == null) {
+			PlayerInfo teammate = (PlayerInfo) m_memory.getObject("player");
+			BallInfo ball = (BallInfo) m_memory.getObject("ball");
 
-					// If you don't know where is ball then find it
-					m_krislet.turn(40);
-					m_memory.waitForNewInfo();
-				} else if (object.m_distance > 1.0) {
-					// If ball is too far then
-					// turn to ball or
-					// if we have correct direction then go to ball
-					if (object.m_direction != 0)
-						m_krislet.turn(object.m_direction);
-					else
-						m_krislet.dash((object.m_distance * object.m_distance)*100);
-				} else {
-					// We know where is ball and we can kick it
-					// so look for goal
-					if (m_side == 'l')
-						object = m_memory.getObject("goal r");
-					else
-						object = m_memory.getObject("goal l");
-
-					if (object == null) {
-						m_krislet.turn(40);
-						m_memory.waitForNewInfo();
-					} else
-						m_krislet.kick(100, object.m_direction);
+			// Find bold og drej krop mod bold
+			while (ball == null) {
+				m_krislet.turn(40);
+				m_memory.waitForNewInfo();
+				ball = (BallInfo) m_memory.getObject("ball");
+				if (ball != null) {
+					m_krislet.turn(ball.m_direction);
 				}
 			}
 
+			if (teammate != null) {
+				foundTeammate = true;
+			}
+
+			head_deg = 0;
+			// Find medspiller og knæk nakken til vi finder ham
+			while (!foundTeammate) {
+				if (up) {
+					if (head_deg != -90) {
+						m_krislet.turn_neck(-30);
+						head_deg -= 30;
+					} else {
+						up = false;
+					}
+				} else {
+					if (head_deg != 90) {
+						m_krislet.turn_neck(30);
+						head_deg += 30;
+					} else {
+						up = true;
+					}
+
+				}
+				m_memory.waitForNewInfo();
+				teammate = (PlayerInfo) m_memory.getObject("player");
+				if (teammate != null) {
+					ln_team_dir = teammate.m_direction;
+					ln_team_dist = teammate.m_distance;
+					team_ball_dist = Math.sqrt(
+							Math.pow(ball.m_distance, 2) + Math.pow(ln_team_dist, 2) - 2 * ball.m_distance * ln_team_dist * Math.cos(Math.toRadians(Math.abs(ln_team_dir) + Math.abs(head_deg)))
+					);
+					m_krislet.turn_neck(-head_deg);
+					foundTeammate = true;
+				}
+			}
+
+
+			System.out.println(team_ball_dist);
+			System.out.println(ln_team_dist);
+			System.out.println(ln_team_dir);
+			System.out.println(head_deg);
+			System.out.println(ball.m_distance);
+			System.out.println(ball.m_direction);
+
+			if (ball.m_distance < team_ball_dist) {
+				System.out.println("I am closest to the ball");
+
+				m_krislet.dash(10 * ball.m_distance);
+			}
+
+			if (ball.m_distance < 1.0) {
+				foundTeammate = false;
+
+				head_deg = 0;
+				while (!foundTeammate) {
+					if (up) {
+						if (head_deg != -90) {
+							m_krislet.turn_neck(-30);
+							head_deg -= 30;
+						} else {
+							up = false;
+						}
+					} else {
+						if (head_deg != 90) {
+							m_krislet.turn_neck(30);
+							head_deg += 30;
+						} else {
+							up = true;
+						}
+
+					}
+					m_memory.waitForNewInfo();
+					teammate = (PlayerInfo) m_memory.getObject("player");
+					if (teammate != null) {
+						ln_team_dir = teammate.m_direction;
+						ln_team_dist = teammate.m_distance;
+						team_ball_dist = Math.sqrt(
+								Math.pow(ball.m_distance, 2) + Math.pow(ln_team_dist, 2) - 2 * ball.m_distance * ln_team_dist * Math.cos(Math.toRadians(Math.abs(ln_team_dir) + Math.abs(head_deg)))
+						);
+						m_krislet.turn_neck(-head_deg);
+						foundTeammate = true;
+					}
+				}
+
+				double kp = ln_team_dist + ((ln_team_dist * (1 - 0.25 * ((ball.m_direction)/180) - 0.25 * (ball.m_distance/0.7))) / 45) * 100;
+				m_krislet.kick(kp, ln_team_dir + head_deg);
+			}
 			// sleep one step to ensure that we will not send
 			// two commands in one cycle.
 			try{
