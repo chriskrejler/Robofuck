@@ -1,6 +1,6 @@
 public class BodyInfo {
-    public double speed = 0;
-    public int frame = 0, stamina = 8000, kickCount = 0, dashCount = 0, turnCount = 0, sayCount = 0;
+    public double speed = 0, stamina = 8000, effort = 1;
+    public int frame = 0, kickCount = 0, dashCount = 0, turnCount = 0, sayCount = 0;
     public String viewMode = "high medium";
 
     public double getSpeed() {
@@ -11,7 +11,7 @@ public class BodyInfo {
         return frame;
     }
 
-    public int getStamina() {
+    public double getStamina() {
         return stamina;
     }
 
@@ -35,6 +35,10 @@ public class BodyInfo {
         return viewMode;
     }
 
+    public double getEffort() {
+        return effort;
+    }
+
     public void setSpeed(double speed) {
         this.speed = speed;
     }
@@ -43,7 +47,7 @@ public class BodyInfo {
         this.frame = frame;
     }
 
-    public void setStamina(int stamina) {
+    public void setStamina(double stamina) {
         this.stamina = stamina;
     }
 
@@ -67,10 +71,15 @@ public class BodyInfo {
         this.viewMode = viewMode;
     }
 
+    public void setEffort(double effort){
+        this.effort = effort;
+    }
+
     @Override
     public String toString() {
         return "BodyInfo{" +
                 "speed=" + speed +
+                ", effort=" + effort +
                 ", frame=" + frame +
                 ", stamina=" + stamina +
                 ", kickCount=" + kickCount +

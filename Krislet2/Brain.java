@@ -54,7 +54,7 @@ class Brain extends Thread implements SensorInput
 
 		// first put it somewhere on my side
 
-		m_krislet.move( -Math.random()*52.5 , Math.random()*34.0 );
+		m_krislet.move( -20 , 0 );
 
 		while( !m_timeOver )
 		{
@@ -66,7 +66,7 @@ class Brain extends Thread implements SensorInput
 					// If you don't know where is ball then find it
 					m_krislet.turn(40);
 					m_memory.waitForNewInfo();
-				} else if (object.m_distance > 1.0) {
+				} else if (object.m_distance > 1) {
 					// If ball is too far then
 					// turn to ball or
 					// if we have correct direction then go to ball
@@ -75,9 +75,11 @@ class Brain extends Thread implements SensorInput
 					else
 						if(this.gameState != States.gameState.BEFORE_KICKOFF && this.gameState != States.gameState.GOAL_L
 						&& this.gameState != States.gameState.GOAL_R) {
-							m_krislet.dash((object.m_distance * object.m_distance) * 100);
+							m_krislet.dash((object.m_distance * object.m_distance) * 80);
 						}
-						else m_krislet.move( -Math.random()*52.5 , Math.random()*34.0 );
+						else {
+							m_krislet.move( -20 , 0 );
+						}
 				} else {
 					// We know where is ball and we can kick it
 					// so look for goal
@@ -90,14 +92,14 @@ class Brain extends Thread implements SensorInput
 						m_krislet.turn(40);
 						m_memory.waitForNewInfo();
 					} else
-						m_krislet.kick(100, object.m_direction);
+						m_krislet.kick(5, object.m_direction);
 				}
 			}
 
 			// sleep one step to ensure that we will not send
 			// two commands in one cycle.
 			try{
-				Thread.sleep(2*SoccerParams.simulator_step);
+				Thread.sleep(SoccerParams.simulator_step);
 			}catch(Exception e){}
 		}
 
@@ -121,8 +123,8 @@ class Brain extends Thread implements SensorInput
 		tokenizer.nextToken();
 		bodyInfo.setViewMode(tokenizer.nextToken() + " " + tokenizer.nextToken());
 		tokenizer.nextToken();
-		bodyInfo.setStamina(Integer.parseInt(tokenizer.nextToken()));
-		tokenizer.nextToken();
+		bodyInfo.setStamina(Double.parseDouble(tokenizer.nextToken()));
+		bodyInfo.setEffort(Double.parseDouble(tokenizer.nextToken()));
 		tokenizer.nextToken();
 		bodyInfo.setSpeed(Double.parseDouble(tokenizer.nextToken()));
 		tokenizer.nextToken();
@@ -135,6 +137,7 @@ class Brain extends Thread implements SensorInput
 		bodyInfo.setSayCount(Integer.parseInt(tokenizer.nextToken()));
 
 		System.out.println(bodyInfo.toString());
+
 	}
 
 
