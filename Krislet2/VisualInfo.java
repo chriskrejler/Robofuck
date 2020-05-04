@@ -272,7 +272,7 @@ class VisualInfo
 			boolean out = true;
 
 			token = m_tokenizer.nextToken();	// space
-			token = m_tokenizer.nextToken();	// p or g or [l|c|r] or [b|t]
+			token = m_tokenizer.nextToken();	// p or g or [l|c|r] or [b|first]
 			if(( token.compareTo("p") == 0 )||( token.compareTo("g") == 0 ))
 			{
 				type = token.charAt(0);
@@ -280,7 +280,7 @@ class VisualInfo
 				token = m_tokenizer.nextToken();	// [l|r]
 				pos1 = token.charAt(0);
 				token = m_tokenizer.nextToken();	// space
-				token = m_tokenizer.nextToken();	// [t|c|b]
+				token = m_tokenizer.nextToken();	// [first|c|b]
 				pos2 = token.charAt(0);
 				out = false;
 			}
@@ -288,7 +288,7 @@ class VisualInfo
 			{
 				pos1 = token.charAt(0);
 				token = m_tokenizer.nextToken();	// space
-				token = m_tokenizer.nextToken();	// [t|b] or 0
+				token = m_tokenizer.nextToken();	// [first|b] or 0
 				pos2 = token.charAt(0);
 
 				if (pos2 == '0')
@@ -315,12 +315,12 @@ class VisualInfo
 				token = m_tokenizer.nextToken();	// ) or space
 				if ( token.compareTo(")") != 0)
 				{
-					token = m_tokenizer.nextToken();	// [t|b]
+					token = m_tokenizer.nextToken();	// [first|b]
 					pos2 = token.charAt(0);
 				}
 				out=false;
 			}
-			else if(( token.compareTo("b") == 0 )||( token.compareTo("t") == 0 ))
+			else if(( token.compareTo("b") == 0 )||( token.compareTo("first") == 0 ))
 			{
 				pos1 = token.charAt(0);
 				token = m_tokenizer.nextToken();	// space
@@ -347,13 +347,13 @@ class VisualInfo
       		if (pos2 != ' ') flagType = flagType + " " + pos2;
 
       		// Implementing flags like this, allows one to specifically find a
-      		// particular flag (i.e. "flag c", or "flag p l t")
+      		// particular flag (i.e. "flag c", or "flag p l first")
 			objInfo = new FlagInfo(flagType, type, pos1, pos2, num, out);
 		}
 		else if(token.compareTo("line") == 0 || token.compareTo("l") == 0) // line object
 		{
 			token = m_tokenizer.nextToken();	// space
-			token = m_tokenizer.nextToken();	// [l|r|t|b]
+			token = m_tokenizer.nextToken();	// [l|r|first|b]
 			objInfo = new LineInfo(token.charAt(0));
 		}
 		else if(token.compareTo("Player") == 0 || token.compareTo("P") == 0)

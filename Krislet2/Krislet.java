@@ -189,7 +189,7 @@ class Krislet implements SendCommand
 	private void parseSensorInformation(String message)
 	{
 		/*
-		// First check kind of information		
+		// First check kind of information
 		if( message.charAt(1) == 's' && message.charAt(3) == 'e')
 		{
 			VisualInfo	info = new VisualInfo(message);
@@ -206,8 +206,11 @@ class Krislet implements SendCommand
 			info.parse();
 			m_brain.see(info);
 		}
-	}
 
+        if (message.charAt(1) == 's' && message.charAt(3) == 'n'){
+            m_brain.senseBody(message);
+        }
+	}
 
 	//---------------------------------------------------------------------------
 	// This function parses hear information
