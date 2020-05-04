@@ -8,108 +8,127 @@
 import java.lang.Math;
 import java.util.StringTokenizer;
 
-
-class Brain extends Thread implements SensorInput
-{
+class Brain extends Thread implements SensorInput {
 	States.gameState gameState = States.gameState.BEFORE_KICKOFF;
 	BodyInfo bodyInfo = new BodyInfo();
-	//---------------------------------------------------------------------------
-	// This constructor:
-	// - stores connection to krislet
-	// - starts thread for this object
-	public Brain(SendCommand krislet, String team, 
-							char side, int number, String playMode)
-	{
-		m_timeOver = false;
-		m_krislet = krislet;
-		m_memory = new Memory();
+    //---------------------------------------------------------------------------
+    // This constructor:
+    // - stores connection to krislet
+    // - starts thread for this object
+    public Brain(SendCommand krislet, String team,
+                 char side, int number, String playMode) {
+        m_timeOver = false;
+        m_krislet = krislet;
+        m_memory = new Memory();
 //		m_team = team;
-		m_side = side;
+        m_side = side;
 //		m_number = number;
 //		m_playMode = playMode;
-		start();
-	}
+        start();
+    }
 
-	//---------------------------------------------------------------------------
-	// This is main brain function used to make decision
-	// In each cycle we decide which command to issue based on
-	// current situation. the rules are:
-	//
-	//	1. If you don't know where is ball then turn right and wait for new info
-	//
-	//	2. If ball is too far to kick it then
-	//		2.1. If we are directed towards the ball then go to the ball
-	//		2.2. else turn to the ball
-	//
-	//	3. If we dont know where is opponent goal then turn wait 
-	//				and wait for new info
-	//
-	//	4. Kick ball
-	//
-	//	To ensure that we don't send commands to often after each cycle
-	//	we waits one simulator steps. (This of course should be done better)
-	public void run()
-	{
-		ObjectInfo object;
 
-		// first put it somewhere on my side
+    //---------------------------------------------------------------------------
+    // This is main brain function used to make decision
+    // In each cycle we decide which command to issue based on
+    // current situation. the rules are:
+    //
+    //	1. If you don'first know where is ball then turn right and wait for new info
+    //
+    //	2. If ball is too far to kick it then
+    //		2.1. If we are directed towards the ball then go to the ball
+    //		2.2. else turn to the ball
+    //
+    //	3. If we dont know where is opponent goal then turn wait
+    //				and wait for new info
+    //
+    //	4. Kick ball
+    //
+    //	To ensure that we don'first send commands to often after each cycle
+    //	we waits one simulator steps. (This of course should be done better)
+    public void run() {
+        int[] turnRates = {0, -30, -60, -90, 30, 60, 90};
+        PlayerInfo lastSeenTeammate = null;
+        int lastSeenTeammate_head_deg = 0;
+        double teammate_dist_ball = 0;
 
-		m_krislet.move( -20 , 0 );
+        // first put it somewhere on my side
+        //m_krislet.move(-Math.random() * 52.5, Math.random() * 34.0);
+        //m_krislet.move(-Math.random() * 10, Math.random() * 15);
 
-		while( !m_timeOver )
-		{
-			synchronized (this) {
-				object = m_memory.getObject("ball");
+        m_krislet.turn(-40);
+        m_memory.waitForNewInfo();
+        //m_krislet.move(-6.35, -25.79);
+        m_krislet.move(-19, 11);
 
-				if (object == null) {
+        while (!m_timeOver) {
+            PlayerInfo teammate = (PlayerInfo) m_memory.getObject("player");
+            BallInfo ball = (BallInfo) m_memory.getObject("ball");
 
-					// If you don't know where is ball then find it
-					m_krislet.turn(40);
-					m_memory.waitForNewInfo();
-				} else if (object.m_distance > 1) {
-					// If ball is too far then
-					// turn to ball or
-					// if we have correct direction then go to ball
-					if (object.m_direction != 0)
-						m_krislet.turn(object.m_direction);
-					else
-						if(this.gameState != States.gameState.BEFORE_KICKOFF && this.gameState != States.gameState.GOAL_L
-						&& this.gameState != States.gameState.GOAL_R) {
-							m_krislet.dash((object.m_distance * object.m_distance) * 80);
-						}
-						else {
-							m_krislet.move( -20 , 0 );
-						}
-				} else {
-					// We know where is ball and we can kick it
-					// so look for goal
-					if (m_side == 'l')
-						object = m_memory.getObject("goal r");
-					else
-						object = m_memory.getObject("goal l");
+            // Look for ball and turn toward it. Default behaviour.
+            while (ball == null) {
+                m_krislet.turn(40);
+                m_memory.waitForNewInfo();
+                ball = (BallInfo) m_memory.getObject("ball");
+                if (ball != null) {
+                    m_krislet.turn(ball.m_direction);
+                    m_memory.waitForNewInfo();
+                }
+            }
 
-					if (object == null) {
-						m_krislet.turn(40);
-						m_memory.waitForNewInfo();
-					} else
-						m_krislet.kick(5, object.m_direction);
-				}
-			}
+            // After ball has been found, we look for any players in our radius by turning our head.
+            // If no players are found within our radius it must mean we are the closest one to the ball and/or the only player on the field.
+            if (lastSeenTeammate == null) {
+                Pair<PlayerInfo, Integer> lastSeen = lookForAPlayer();
+                lastSeenTeammate = lastSeen.getFirst();
+                lastSeenTeammate_head_deg = lastSeen.getSecond();
 
+                if (lastSeenTeammate == null) {
+                    // A teammate was not found
+                    System.out.println("A player was not found!");
+                }
+            } else {
+                // A teammate was found
+                // Determine if we are closer than our teammate to the ball
+                double teammate_distance_to_ball = calculateTeammateDistanceToBall(lastSeenTeammate, lastSeenTeammate_head_deg, ball);
+                double my_distance_to_ball = ball.m_distance;
+
+                /* Print statements to check distance and determining if closer to ball than teammate */
+                System.out.println("Teammate distance: " + teammate_distance_to_ball);
+                System.out.println("My distance: " + my_distance_to_ball);
+                System.out.println(isClosestToBall(my_distance_to_ball, teammate_distance_to_ball));
+                System.out.println("\n");
+
+                if (isClosestToBall(my_distance_to_ball, teammate_distance_to_ball)) {
+                    // Dash to ball if we are the closest one
+                    m_krislet.dash(10 * ball.m_distance);
+
+                    if (ball.m_distance < 1.0) {
+                        // We need to know where to pass the ball, so we look for our teammate
+                        System.out.println("Close to ball , looking for player");
+                        Pair<PlayerInfo, Integer> lastSeen = lookForAPlayer();
+                        if (lastSeen.getFirst() != null && lastSeen.getSecond() != null) {
+                            lastSeenTeammate = lastSeen.getFirst();
+                            lastSeenTeammate_head_deg = lastSeen.getSecond();
+                        }
+
+                        m_krislet.kick(calculatePower(lastSeenTeammate.m_distance, ball), lastSeenTeammate.m_direction + lastSeenTeammate_head_deg);
+                    }
+
+                }
+            }
 			// sleep one step to ensure that we will not send
 			// two commands in one cycle.
-			try{
+			try {
 				Thread.sleep(SoccerParams.simulator_step);
-			}catch(Exception e){}
-		}
-
-	}
-
-
-
+			} catch (
+					Exception e) {
+			}
+        }
+    }
 
 
-//===========================================================================
+    //===========================================================================
 // Here are suporting functions for implement logic
 
 	public void setGameState(States.gameState gs){
@@ -133,35 +152,82 @@ class Brain extends Thread implements SensorInput
 		bodyInfo.setDashCount(Integer.parseInt(tokenizer.nextToken()));
 		tokenizer.nextToken();
 		bodyInfo.setTurnCount(Integer.parseInt(tokenizer.nextToken()));
-        tokenizer.nextToken();
+		tokenizer.nextToken();
 		bodyInfo.setSayCount(Integer.parseInt(tokenizer.nextToken()));
 
 		System.out.println(bodyInfo.toString());
 
 	}
 
+    private boolean isClosestToBall(double my_distance, double teammate_distance) {
+        return my_distance < teammate_distance;
+    }
+
+    private double calculateTeammateDistanceToBall(PlayerInfo teammate, int player_head_degrees, BallInfo ball) {
+        // https://da.wikipedia.org/wiki/Cosinusrelation
+
+
+        return Math.sqrt(
+                Math.pow(ball.m_distance, 2) + Math.pow(teammate.m_distance, 2) - 2 * ball.m_distance * teammate.m_distance * Math.cos(Math.toRadians(Math.abs(player_head_degrees) - teammate.m_direction))
+        );
+    }
+
+    private Pair<PlayerInfo, Integer> lookForAPlayer() {
+        PlayerInfo last_teammate;
+        int[] turnRates = {0, -90, 180};
+
+        for (int turnRate : turnRates) {
+            m_krislet.turn_neck((turnRate));
+            m_memory.waitForNewInfo();
+            PlayerInfo teammate = (PlayerInfo) m_memory.getObject("player");
+
+            // A teammate was found within our radius
+            // Save teammate to global and turn back.
+            if (teammate != null) {
+                last_teammate = teammate;
+
+                // Temp. until body sensor parser has been implemented
+                if (turnRate > 0) {
+                    m_krislet.turn_neck(-90);
+                } else {
+                    m_krislet.turn_neck(Math.abs(turnRate));
+                }
+                m_memory.waitForNewInfo();
+
+                return new Pair<>(last_teammate, turnRate);
+            }
+
+        }
+        m_krislet.turn_neck(-90);
+        m_memory.waitForNewInfo();
+        return new Pair<>(null, 0);
+    }
+
+    private double calculatePower(float teammate_distance, BallInfo ball) {
+        return teammate_distance + ((teammate_distance * (1 - 0.25 * ((ball.m_direction) / 180) - 0.25 * (ball.m_distance / 0.7))) / 45) * 100;
+    }
+
 
 //===========================================================================
 // Implementation of SensorInput Interface
 
-	//---------------------------------------------------------------------------
-	// This function sends see information
-	public void see(VisualInfo info)
-	{
-		m_memory.store(info);
-	}
+    //---------------------------------------------------------------------------
+    // This function sends see information
+    public void see(VisualInfo info) {
+        m_memory.store(info);
+    }
 
 
-	//---------------------------------------------------------------------------
-	// This function receives hear information from player
-	public void hear(int time, int direction, String message)
-	{
-	}
+    //---------------------------------------------------------------------------
+    // This function receives hear information from player
+    public void hear(int time, int direction, String message) {
+    }
 
-	//---------------------------------------------------------------------------
-	// This function receives hear information from referee
-	public void hear(int time, String message)
-	{
+
+    //---------------------------------------------------------------------------
+    // This function receives hear information from referee
+    public void hear(int time, String message) {
+
 		StringTokenizer tokenizer = new StringTokenizer(message,"() ", true);
 		String token;
 
@@ -237,11 +303,11 @@ class Brain extends Thread implements SensorInput
 	}
 
 
-//===========================================================================
+    //===========================================================================
 // Private members
-	private SendCommand	m_krislet;			// robot which is controled by this brain
-	private Memory			m_memory;				// place where all information is stored
-	private char				m_side;
-	volatile private boolean		m_timeOver;
+    private SendCommand m_krislet;            // robot which is controled by this brain
+    private Memory m_memory;                // place where all information is stored
+    private char m_side;
+    volatile private boolean m_timeOver;
 }
 

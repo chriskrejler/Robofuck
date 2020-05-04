@@ -182,8 +182,8 @@ class BallInfo extends ObjectInfo
 class FlagInfo extends ObjectInfo
 {
   char m_type;  // p|g
-  char m_pos1;  // t|b|l|c|r
-  char m_pos2;  // l|r|t|c|b
+  char m_pos1;  // first|b|l|c|r
+  char m_pos2;  // l|r|first|c|b
   int m_num;    // 0|10|20|30|40|50
   boolean m_out;
 
@@ -229,7 +229,7 @@ class FlagInfo extends ObjectInfo
 //***************************************************************************
 class LineInfo extends ObjectInfo
 {
-  char m_kind;  // l|r|t|b
+  char m_kind;  // l|r|first|b
 
   //===========================================================================
   // Initialization member functions
