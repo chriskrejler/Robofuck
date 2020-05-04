@@ -41,11 +41,25 @@ class Brain extends Thread implements SensorInput
 
 
     public void run() {
+		fourMan();
         while (!m_timeOver) {
 
         }
 
     }
+
+    public void fourMan(){
+		if ((PlayerInfo) m_memory.getObject("player") != null){
+			PlayerInfo player1 = (PlayerInfo) m_memory.getObject("player");
+			String team1 = player1.getTeamName();
+			m_krislet.moveObject("player " + team1 + " 1", -20, 0);
+			m_krislet.moveObject("player " + team1 + " 2", 20, 0);
+			m_krislet.moveObject("player " + team1 + " 3", 0, -20);
+			m_krislet.moveObject("player " + team1 + " 4", 0, 20);
+			m_krislet.moveObject("ball", -19, 0);
+		}
+
+	}
 
     public boolean inPossesion(){
         BallInfo ball = (BallInfo) m_memory.getObject("ball");
