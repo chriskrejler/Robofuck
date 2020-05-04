@@ -222,6 +222,7 @@ class Krislet implements SendCommand
 	// This function parses sensor information
 	private void parseSensorInformation(String message)
 	{
+
 		// First check kind of information		
 		if( message.charAt(1) == 's' && message.charAt(3) == 'e')
 		{
@@ -229,10 +230,13 @@ class Krislet implements SendCommand
 			info.parse();
 			m_brain.see(info);
 		}
-		else if( message.charAt(1) == 'h' )
+		if( message.charAt(1) == 'h' ) {
 			parseHear(message);
+		}
+		if (message.charAt(1) == 's' && message.charAt(3) == 'n'){
+			m_brain.senseBody(message);
+		}
 	}
-
 
 	//---------------------------------------------------------------------------
 	// This function parses hear information
@@ -240,6 +244,7 @@ class Krislet implements SendCommand
 	{
 		// get hear information
 		StringTokenizer	tokenizer = new StringTokenizer(message,"() ");
+		System.out.println(message);
 		int	time;
 		String sender;
 
