@@ -48,26 +48,13 @@ class Brain extends Thread implements SensorInput
     }
 
     public boolean inPossesion(){
+        BallInfo ball = (BallInfo) m_memory.getObject("ball");
+
+
+
         return false;
     }
 
-    private double calculateTeammateDistanceToBall(PlayerInfo teammate, int player_head_degrees, BallInfo ball) {
-        // https://da.wikipedia.org/wiki/Cosinusrelation
-
-        double degrees = Math.abs(player_head_degrees) - Math.abs(teammate.m_direction);
-        return Math.sqrt(
-                Math.pow(ball.m_distance, 2) +
-                        Math.pow(teammate.m_distance, 2) - 2 *
-                        ball.m_distance *
-                        teammate.m_distance *
-                        Math.cos(Math.toRadians(degrees))
-        );
-    }
-
-
-    private double calculatePower(float teammate_distance, BallInfo ball) {
-        return teammate_distance + ((teammate_distance * (1 - 0.25 * ((ball.m_direction) / 180) - 0.25 * (ball.m_distance / 0.7))) / 45) * 100;
-    }
 
     public int timeToArrival(BallInfo ball, PlayerInfo teammate){
         double ax;
@@ -192,37 +179,6 @@ class Brain extends Thread implements SensorInput
         return Math.sqrt(
                 Math.pow(ball.m_distance, 2) + Math.pow(teammate.m_distance, 2) - 2 * ball.m_distance * teammate.m_distance * Math.cos(Math.toRadians(Math.abs(player_head_degrees) - teammate.m_direction))
         );
-    }
-
-    private Pair<PlayerInfo, Integer> lookForAPlayer() {
-        PlayerInfo last_teammate;
-        int[] turnRates = {0, -90, 180};
-
-        for (int turnRate : turnRates) {
-            m_krislet.turn_neck((turnRate));
-            m_memory.waitForNewInfo();
-            PlayerInfo teammate = (PlayerInfo) m_memory.getObject("player");
-
-            // A teammate was found within our radius
-            // Save teammate to global and turn back.
-            if (teammate != null) {
-                last_teammate = teammate;
-
-                // Temp. until body sensor parser has been implemented
-                if (turnRate > 0) {
-                    m_krislet.turn_neck(-90);
-                } else {
-                    m_krislet.turn_neck(Math.abs(turnRate));
-                }
-                m_memory.waitForNewInfo();
-
-                return new Pair<>(last_teammate, turnRate);
-            }
-
-        }
-        m_krislet.turn_neck(-90);
-        m_memory.waitForNewInfo();
-        return new Pair<>(null, 0);
     }
 
     private double calculatePower(float teammate_distance, BallInfo ball) {
