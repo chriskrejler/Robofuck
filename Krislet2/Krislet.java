@@ -154,6 +154,10 @@ class Krislet implements SendCommand
 		send("(move (" + object + ") " + x + " " + y + ")");
 	}
 
+	public void sendGameScore(double distanceTraveled){
+		send("(say " + distanceTraveled + ")");
+	}
+
 	//---------------------------------------------------------------------------
 	// This function parses initial message from the server
 	protected void parseInitCommand(String message)	throws IOException

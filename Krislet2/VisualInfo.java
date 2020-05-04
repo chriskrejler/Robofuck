@@ -17,7 +17,7 @@ import java.util.*;
 
 class VisualInfo
 {
-	private int	m_time;
+	public int	m_time;
 	public Vector m_objects;
 	public StringTokenizer m_tokenizer;
 	public String m_message;
@@ -67,6 +67,7 @@ class VisualInfo
       {
           return m_flag_list;
       }
+
 
 	//---------------------------------------------------------------------------
 	// This function parses visual information from the server
@@ -135,7 +136,7 @@ class VisualInfo
 				token = m_tokenizer.nextToken();
         			// Get object's approximate distance from agent - actual distance
         			// becomes more difficult to determine as the distance increases
-				objInfo.m_distance = Float.valueOf(token).floatValue();
+				objInfo.m_X = Float.valueOf(token).floatValue();
 				token = m_tokenizer.nextToken();
 
 				if( token.compareTo(")") == 0 )
@@ -146,7 +147,7 @@ class VisualInfo
 				}
 
 		        	// Get object direction relative to the agent
-				objInfo.m_direction = Float.valueOf(m_tokenizer.nextToken()).floatValue();
+				objInfo.m_Y = Float.valueOf(m_tokenizer.nextToken()).floatValue();
 				token = m_tokenizer.nextToken();
 
 				if( token.compareTo(")") == 0 )
@@ -157,7 +158,7 @@ class VisualInfo
 				}
 
         			// Get the distance change since last 'see' message
-				objInfo.m_distChange = Float.valueOf(m_tokenizer.nextToken()).floatValue();
+				objInfo.m_deltaX = Float.valueOf(m_tokenizer.nextToken()).floatValue();
 				token = m_tokenizer.nextToken();
 
 				if( token.compareTo(")") == 0 )
@@ -168,7 +169,7 @@ class VisualInfo
 				}
 
         			// Get direction change since last 'see' message
-				objInfo.m_dirChange = Float.valueOf(m_tokenizer.nextToken()).floatValue();
+				objInfo.m_deltaY = Float.valueOf(m_tokenizer.nextToken()).floatValue();
 				token = m_tokenizer.nextToken();
 
 				if( token.compareTo(")") == 0 )

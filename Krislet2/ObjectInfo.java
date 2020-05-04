@@ -16,10 +16,11 @@
 class ObjectInfo
 {
   public String m_type;
-  public float m_distance;
-  public float m_direction;
-  public float m_distChange;
-  public float m_dirChange;
+  public float m_X;
+  public float m_Y;
+  public float m_deltaX;
+  public float m_deltaY;
+
 
   //===========================================================================
   // Initialization member functions
@@ -30,22 +31,22 @@ class ObjectInfo
 
   public float getDistance()
   {
-    return m_distance;
+    return m_X;
   }
 
   public float getDirection()
   {
-    return m_direction;
+    return m_Y;
   }
 
   public float getDistChange()
   {
-    return m_distChange;
+    return m_deltaX;
   }
 
   public float getDirChange()
   {
-    return m_dirChange;
+    return m_deltaY;
   }
 
   public String getType()

@@ -4,7 +4,9 @@
 //	Date:			1997/04/28
 //
 
-class Memory 
+import java.util.List;
+
+class Memory
 {
 	//---------------------------------------------------------------------------
 	// This constructor:
@@ -59,6 +61,14 @@ class Memory
 			{
 			}
 		}
+	}
+
+	public List<PlayerInfo> getPlyerInfo(){
+		return m_info.getPlayerList();
+	}
+
+	public int getTime(){
+		return m_info.m_time;
 	}
 
 

@@ -17,6 +17,7 @@
 interface SendCommand
 {
 	void moveObject(String object, int x, int y);
+	public void sendGameScore(double distanceTraveled);
 }
 
 

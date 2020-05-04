@@ -6,7 +6,6 @@
 //    Modified by:	Paul Marlow
 
 import java.lang.Math;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -19,16 +18,12 @@ class Brain extends Thread implements SensorInput
 	// This constructor:
 	// - stores connection to krislet
 	// - starts thread for this object
-	public Brain(SendCommand krislet, String team, 
+	public Brain(SendCommand krislet, String team,
 							char side, int number, String playMode)
 	{
 		m_timeOver = false;
 		m_krislet = krislet;
 		m_memory = new Memory();
-//		m_team = team;
-        m_side = side;
-//		m_number = number;
-//		m_playMode = playMode;
         start();
     }
 
@@ -41,104 +36,45 @@ class Brain extends Thread implements SensorInput
 
 
     public void run() {
-        while (!m_timeOver) {
+		ObjectInfo ballTemp = m_memory.getObject("ball");
+		ballX = ballTemp.m_X;
+		ballY = ballTemp.m_Y;
+        while (true) {
 
+        	//Collect amount of distance ball traveled
+			ObjectInfo ball = m_memory.getObject("ball");
+			//Dist traveled is sqrt of a^2 + b^2
+			distanceTraveled = Math.sqrt(
+					(Math.abs(ballX - ball.m_X) * Math.abs(ballX - ball.m_X)) +
+					(Math.abs(ballX - ball.m_X) * Math.abs(ballX - ball.m_X)));
+
+			//Check if ball is in possession, or time is over
+        	if(!inPossession() || !(m_memory.getTime() < timelimit)){
+        		m_krislet.sendGameScore(distanceTraveled);
+			}
         }
-
     }
 
-    public boolean inPossesion(){
+    public boolean inPossession(){
         BallInfo ball = (BallInfo) m_memory.getObject("ball");
+		List<PlayerInfo> players = m_memory.getPlyerInfo();
 
-
-
-        return false;
+		if (ball.m_deltaX + ball.m_deltaY < 0.1){
+			for(PlayerInfo player: players){
+				if (Math.abs(player.m_X - ball.m_X) + Math.abs(player.m_Y - ball.m_Y) < 1){
+					return true;
+				}
+			}
+			return false;
+		}
+        return true;
     }
 
 
-    public int timeToArrival(BallInfo ball, PlayerInfo teammate){
-        double ax;
-        double px;
-        double vx;
 
-        int tick = 1;
-        double position = teammate.m_distance;
-        double traveled = 0;
 
-        ax = calculatePower(teammate.m_distance, ball) * 0.027;
-        px = ax;
-        traveled += px;
-        vx = 0.94 * ax;
 
-        while(position - traveled > 0.5){
-            px = px+vx;
-            traveled+=px;
-            vx = 0.94 * ax;
-            tick++;
-        }
-        return tick;
-    }
 
-    public double distanceDashed(int time){
-
-        double ax;
-        double px;
-        double vx;
-        int tick = 1;
-        double traveled = 0;
-
-        ax = 100 * 0.006;
-        px = ax;
-        traveled += px;
-        vx = 0.94 * ax;
-
-        while(tick < time){
-            px = px+vx;
-            traveled+=px;
-            vx = 0.94 * ax;
-            tick += 2;
-        }
-        return traveled;
-    }
-
-    public boolean isPlayerFree(BallInfo ball, PlayerInfo teammate, List<PlayerInfo> enemies, double radius){
-        double currentRadius = -radius;
-        double playerLength = teammate.m_distance;
-        double a, c, height;
-        List<Double> freeLengths = new ArrayList<>();
-
-        while(currentRadius < radius){
-            a = currentRadius/playerLength;
-            c = currentRadius;
-
-            for(PlayerInfo enemy: enemies){
-                if(enemy.m_distance < playerLength){
-                    height = calculateHeight(enemy.m_direction, enemy.m_distance);
-                    if(checkCollision(a, 0, c, playerLength, 0, radius) &&
-                            !checkCollision(a, 0, c, enemy.m_distance, height, radius)){
-                        freeLengths.add(currentRadius);
-                    }
-                }
-            }
-            currentRadius++;
-        }
-        return false;
-    }
-
-    private double calculateHeight(double angle, double length){
-        return Math.sin(Math.toRadians(angle))*length;
-    }
-
-    private boolean checkCollision(double a, double b, double c,
-                                           double x, double y, double radius)
-    {
-        // Finding the distance of line from center.
-        double dist = (Math.abs(a * x + b * y + c)) /
-                Math.sqrt(a * a + b * b);
-        // Checking if the distance is less than,
-        // greater than or equal to radius.
-        return radius > dist;
-    }
 
 	public void setGameState(States.gameState gs){
 		gameState = gs;
@@ -168,22 +104,7 @@ class Brain extends Thread implements SensorInput
 
 	}
 
-    private boolean isClosestToBall(double my_distance, double teammate_distance) {
-        return my_distance < teammate_distance;
-    }
 
-    private double calculateTeammateDistanceToBall(PlayerInfo teammate, int player_head_degrees, BallInfo ball) {
-        // https://da.wikipedia.org/wiki/Cosinusrelation
-
-
-        return Math.sqrt(
-                Math.pow(ball.m_distance, 2) + Math.pow(teammate.m_distance, 2) - 2 * ball.m_distance * teammate.m_distance * Math.cos(Math.toRadians(Math.abs(player_head_degrees) - teammate.m_direction))
-        );
-    }
-
-    private double calculatePower(float teammate_distance, BallInfo ball) {
-        return teammate_distance + ((teammate_distance * (1 - 0.25 * ((ball.m_direction) / 180) - 0.25 * (ball.m_distance / 0.7))) / 45) * 100;
-    }
 
 
 //===========================================================================
@@ -280,18 +201,6 @@ class Brain extends Thread implements SensorInput
 
 	}
 
-	public double calculateBallArrival(BallInfo ball, PlayerInfo teammate, PlayerInfo enemy){
-
-		double oBall = 0;
-		double velocity = 10;
-		double kp = teammate.m_distance + ((teammate.m_distance * (1 - 0.25 * ((ball.m_direction)/180) - 0.25 * (ball.m_distance/0.7))) / 45) * 100;
-
-		while(velocity > 0.1){
-			oBall = teammate.m_direction;
-		}
-		return 2.0;
-	}
-
 
     //===========================================================================
 // Private members
@@ -299,5 +208,10 @@ class Brain extends Thread implements SensorInput
     private Memory m_memory;                // place where all information is stored
     private char m_side;
     volatile private boolean m_timeOver;
+    private int timelimit = 2000;
+    public double distanceTraveled = 0;
+    private double ballX = 0;
+	private double ballY = 0;
+
 }
 
