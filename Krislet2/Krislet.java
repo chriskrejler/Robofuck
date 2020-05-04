@@ -144,50 +144,11 @@ class Krislet implements SendCommand
 
 	//---------------------------------------------------------------------------
 	// This function sends move command to the server
-	public void move(double x, double y)
-	{
-		send("(move " + Double.toString(x) + " " + Double.toString(y) + ")");
-	}
 
-	//---------------------------------------------------------------------------
-	// This function sends turn command to the server
-	public void turn(double moment)
-	{
-		send("(turn " + Double.toString(moment) + ")");
-	}
-
-	public void turn_neck(double moment)
-	{
-		send("(turn_neck " + Double.toString(moment) + ")");
-	}
-
-	//---------------------------------------------------------------------------
-	// This function sends dash command to the server
-	public void dash(double power)
-	{
-		send("(dash " + Double.toString(power) + ")");
-	}
-
-	//---------------------------------------------------------------------------
-	// This function sends kick command to the server
-	public void kick(double power, double direction)
-	{
-		send("(kick " + Double.toString(power) + " " + Double.toString(direction) + ")");
-	}
 
 	//---------------------------------------------------------------------------
 	// This function sends say command to the server
-	public void say(String message)
-	{
-		send("(say " + message + ")");
-	}
 
-	//---------------------------------------------------------------------------
-	// This function sends chage_view command to the server
-	public void changeView(String angle, String quality)
-	{
-		send("(change_view " + angle + " " + quality + ")");
-	}
 
 	public void moveObject(String object, int x, int y){
 		send("(move (" + object + ") " + x + " " + y + ")");
