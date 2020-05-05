@@ -98,28 +98,91 @@ public class Population {
 
         System.out.println("generation  " + this.gen + "  Number of mutations  " + this.innovationHistory.size() + "  species:   " + this.species.size() + "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
+        // (int) Math.floor(randomInteger(0, this.genes.size()));
 
         double averageSum = this.getAvgFitnessSum();
         ArrayList<Player> children = new ArrayList<>();
         for (var j = 0; j < this.species.size(); j++) { //for each this.species
             children.add(this.species.get(j).champ.clone()); //add champion without any mutation
-            var NoOfChildren = floor(this.species[j].averageFitness / averageSum * this.players.length) - 1; //the number of children this this.species is allowed, note -1 is because the champ is already added
+            var NoOfChildren = Math.floor(this.species.get(j).averageFitness / averageSum * this.players.size()) - 1; //the number of children this this.species is allowed, note -1 is because the champ is already added
             for (var i = 0; i < NoOfChildren; i++) { //get the calculated amount of children from this this.species
-                children.push(this.species[j].giveMeBaby(this.innovationHistory));
+                children.add(this.species.get(j).giveMeBaby(this.innovationHistory));
             }
         }
-        if (children.length < this.players.length) {
-            children.push(previousBest.clone());
+        if (children.size() < this.players.size()) {
+            children.add(previousBest.clone());
         }
-        while (children.length < this.players.length) { //if not enough babies (due to flooring the number of children to get a whole var)
-            children.push(this.species[0].giveMeBaby(this.innovationHistory)); //get babies from the best this.species
+        while (children.size() < this.players.size()) { //if not enough babies (due to flooring the number of children to get a whole var)
+            children.add(this.species.get(0).giveMeBaby(this.innovationHistory)); //get babies from the best this.species
         }
 
-        this.players = [];
-        arrayCopy(children, this.players); //set the children as the current this.playersulation
+        this.players.clear();
+        this.players = new ArrayList<>(children);
+        //arrayCopy(children, this.players); //set the children as the current this.playersulation
         this.gen += 1;
-        for (var i = 0; i < this.players.length; i++) { //generate networks for each of the children
-            this.players[i].brain.generateNetwork();
+        for (var i = 0; i < this.players.size(); i++) { //generate networks for each of the children
+            this.players.get(i).brain.generateNetwork();
         }
     }
+
+
+    //------------------------------------------------------------------------------------------------------------------------------------------
+    //seperate this.players into this.species based on how similar they are to the leaders of each this.species in the previousthis.gen
+    public void speciate() {
+        for (Species s : this.species) { //empty this.species
+            s.players.clear();
+        }
+        for (var i = 0; i < this.players.size(); i++) { //for each player
+            var speciesFound = false;
+            for (Species s : this.species) { //for each this.species
+                if (s.sameSpecies(this.players.get(i).brain)) { //if the player is similar enough to be considered in the same this.species
+                    s.addToSpecies(this.players.get(i)); //add it to the this.species
+                    speciesFound = true;
+                    break;
+                }
+            }
+            if (!speciesFound) { //if no this.species was similar enough then add a new this.species with this as its champion
+                this.species.add(new Species(this.players.get(i)));
+            }
+        }
+    }
+    //------------------------------------------------------------------------------------------------------------------------------------------
+    //calculates the fitness of all of the players
+    public void calculateFitness() {
+        for (var i = 1; i < this.players.size(); i++) {
+            this.players.get(i).calculateFitness();
+        }
+    }
+    //------------------------------------------------------------------------------------------------------------------------------------------
+    //sorts the players within a this.species and the this.species by their fitnesses
+    public void sortSpecies() {
+        //sort the players within a this.species
+        for (Species s : this.species) {
+            s.sortSpecies();
+        }
+
+        //sort the this.species by the fitness of its best player
+        //using selection sort like a loser
+        ArrayList<Species> temp = new ArrayList<>(); //new ArrayList<Species>();
+        for (var i = 0; i < this.species.size(); i++) {
+            double max = 0;
+            double maxIndex = 0;
+            for (var j = 0; j < this.species.size(); j++) {
+                if (this.species.get(j).bestFitness > max) {
+                    max = this.species.get(j).bestFitness;
+                    maxIndex = j;
+                }
+            }
+            temp.add(this.species.get(maxIndex));
+            this.species.splice(maxIndex, 1);
+            // this.species.remove(maxIndex);
+            i--;
+        }
+        this.species.clear();
+        this.species = new ArrayList<>(this.species);
+        arrayCopy(temp, this.species);
+
+    }
+
+
 }
