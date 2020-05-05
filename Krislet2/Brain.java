@@ -6,8 +6,8 @@
 //    Modified by:	Paul Marlow
 
 import java.lang.Math;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 
@@ -37,11 +37,17 @@ class Brain extends Thread implements SensorInput
 
 
     public void run() {
-		ObjectInfo ballTemp = m_memory.getObject("ball");
-		ballX = ballTemp.m_X;
-		ballY = ballTemp.m_Y;
-        while (true) {
+	    //Initialize the game
+        ObjectInfo ballTemp = m_memory.getObject("ball");
+	    while(ballTemp == null){
+            ballTemp = m_memory.getObject("ball");
+        }
+        ballX = ballTemp.m_X;
+        ballY = ballTemp.m_Y;
 
+        fourMan();
+
+        while (true) {
         	//Collect amount of distance ball traveled
 			ObjectInfo ball = m_memory.getObject("ball");
 			//Dist traveled is sqrt of a^2 + b^2
@@ -51,36 +57,57 @@ class Brain extends Thread implements SensorInput
 
 			//Check if ball is in possession, or time is over
         	if(!inPossession() || !(m_memory.getTime() < timelimit)){
+        	    //Send the distance the ball has traveled, and set game state to before_kick_off
         		m_krislet.sendGameScore(distanceTraveled);
-			}
+        		m_krislet.signalEndOfGame(1);
+        		//Wait for the NEAT algorithm to mutate
+        		try{
+                    currentThread().sleep(100);
+                }catch(Exception e){
+                    System.out.println("cry");
+                }
+        		//Reset ball, and set game state to play_on
+                m_krislet.moveObject("ball", -19.5, 0);
+                m_krislet.signalEndOfGame(0);
+            }
         }
     }
 
     public void fourMan(){
-        if ((PlayerInfo) m_memory.getObject("player") != null){
-            PlayerInfo player1 = (PlayerInfo) m_memory.getObject("player");
+	    //Get team name from a random player
+        PlayerInfo player1 = (PlayerInfo) m_memory.getObject("player");
+        if (player1 != null){
             String team1 = player1.getTeamName();
-            m_krislet.moveObject("player " + team1 + " 1", -20, 0);
-            m_krislet.moveObject("player " + team1 + " 2", 20, 0);
-            m_krislet.moveObject("player " + team1 + " 3", 0, -20);
-            m_krislet.moveObject("player " + team1 + " 4", 0, 20);
-            m_krislet.moveObject("ball", -19, 0);
+            m_krislet.moveObject("player " + team1 + " 1", -getRandomInRange(20), getRandomInRange(0));
+            m_krislet.moveObject("player " + team1 + " 2", getRandomInRange(20), 0);
+            m_krislet.moveObject("player " + team1 + " 3", getRandomInRange(0), -getRandomInRange(20));
+            m_krislet.moveObject("player " + team1 + " 4", getRandomInRange(0), getRandomInRange(20));
+            m_krislet.moveObject("ball", -19.5, 0);
         }
 
+    }
+
+    public int getRandomInRange(int number){
+        Random rand = new Random();
+        int max = number + 5;
+        int min = number - 5;
+        return rand.nextInt(max - min + 1) + min;
     }
 
     public boolean inPossession(){
         BallInfo ball = (BallInfo) m_memory.getObject("ball");
 		List<PlayerInfo> players = m_memory.getPlyerInfo();
 
-		if (ball.m_deltaX + ball.m_deltaY < 0.1){
-			for(PlayerInfo player: players){
-				if (Math.abs(player.m_X - ball.m_X) + Math.abs(player.m_Y - ball.m_Y) < 1){
-					return true;
-				}
-			}
-			return false;
-		}
+		if (ball != null && !players.isEmpty()) {
+            if (ball.m_deltaX + ball.m_deltaY < 0.1) {
+                for (PlayerInfo player : players) {
+                    if (Math.abs(player.m_X - ball.m_X) + Math.abs(player.m_Y - ball.m_Y) < 3) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
         return true;
     }
 

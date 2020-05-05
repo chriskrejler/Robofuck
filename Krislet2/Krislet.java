@@ -150,12 +150,20 @@ class Krislet implements SendCommand
 	// This function sends say command to the server
 
 
-	public void moveObject(String object, int x, int y){
+	public void moveObject(String object, double x, double y){
 		send("(move (" + object + ") " + x + " " + y + ")");
 	}
 
 	public void sendGameScore(double distanceTraveled){
 		send("(say " + distanceTraveled + ")");
+	}
+
+	public void signalEndOfGame(int type){
+		if(type == 1){
+			send("(change_mode before_kick_off)");
+		}else {
+			send("(change_mode play_on)");
+		}
 	}
 
 	//---------------------------------------------------------------------------
