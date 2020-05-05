@@ -8,14 +8,14 @@ public class Node {
     private int number;
     private double inputSum = 0;
     private double outputValue = 0;
-    private ArrayList<ConnectionGene> outputConnections;
+    ArrayList<ConnectionGene> outputConnections;
     private int layer = 0;
 
     public Node(int number) {
         this.number = number;
     }
 
-    private void engage() {
+    public void engage() {
         if (this.layer != 0) {
             this.outputValue = this.sigmoid(this.inputSum);
         }
@@ -28,7 +28,7 @@ public class Node {
         }
     }
 
-    private boolean isConnectedTo (Node node) {
+    public boolean isConnectedTo (Node node) {
         if(node.layer == this.layer) { //nodes in the same this.layer cannot be connected
             return false;
         }
