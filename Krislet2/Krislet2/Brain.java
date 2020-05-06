@@ -2,14 +2,14 @@ package Krislet2;
 
 import java.util.StringTokenizer;
 
-class Brain extends Thread implements SensorInput {
+public class Brain extends Thread implements SensorInput {
 	States.gameState gameState = States.gameState.BEFORE_KICKOFF;
 	BodyInfo bodyInfo = new BodyInfo();
     //---------------------------------------------------------------------------
     // This constructor:
     // - stores connection to krislet
     // - starts thread for this object
-    public Brain(SendCommand krislet, String team,
+    public Brain(Krislet krislet, String team,
                  char side, int number, String playMode) {
         m_timeOver = false;
         m_krislet = krislet;
@@ -154,8 +154,8 @@ class Brain extends Thread implements SensorInput {
 
     //===========================================================================
 // Private members
-    private SendCommand m_krislet;            // robot which is controled by this brain
-    private Memory m_memory;                // place where all information is stored
+    public Krislet m_krislet;            // robot which is controled by this brain
+    public Memory m_memory;                // place where all information is stored
     private char m_side;
     volatile private boolean m_timeOver;
 }
