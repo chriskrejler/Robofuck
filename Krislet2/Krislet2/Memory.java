@@ -1,10 +1,6 @@
-//
-//	File:			Memory.java
-//	Author:		Krzysztof Langner
-//	Date:			1997/04/28
-//
+package Krislet2;
 
-class Memory 
+public class Memory
 {
 	//---------------------------------------------------------------------------
 	// This constructor:

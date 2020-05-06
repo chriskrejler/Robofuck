@@ -1,4 +1,4 @@
-//
+package Krislet2;//
 //	File:			VisualInfo.java
 //	Author:		Krzysztof Langner
 //	Date:			1997/04/28
