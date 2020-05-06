@@ -62,6 +62,7 @@ class Brain extends Thread implements SensorInput {
         m_krislet.move(-19, 11);
 
         while (!m_timeOver) {
+			System.out.println(gameState);
             PlayerInfo teammate = (PlayerInfo) m_memory.getObject("player");
             BallInfo ball = (BallInfo) m_memory.getObject("ball");
 
@@ -154,8 +155,6 @@ class Brain extends Thread implements SensorInput {
 		bodyInfo.setTurnCount(Integer.parseInt(tokenizer.nextToken()));
 		tokenizer.nextToken();
 		bodyInfo.setSayCount(Integer.parseInt(tokenizer.nextToken()));
-
-		System.out.println(bodyInfo.toString());
 
 	}
 
