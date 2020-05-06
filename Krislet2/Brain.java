@@ -45,53 +45,90 @@ class Brain extends Thread implements SensorInput
         ballX = ballTemp.m_X;
         ballY = ballTemp.m_Y;
 
-        fourMan();
+        threeManVision();
 
         while (true) {
         	//Collect amount of distance ball traveled
 			ObjectInfo ball = m_memory.getObject("ball");
+			List<PlayerInfo> players = m_memory.getPlyerInfo();
 			//Dist traveled is sqrt of a^2 + b^2
+			/*
 			distanceTraveled = Math.sqrt(
 					(Math.abs(ballX - ball.m_X) * Math.abs(ballX - ball.m_X)) +
 					(Math.abs(ballX - ball.m_X) * Math.abs(ballX - ball.m_X)));
+					*/
 
-			//Check if ball is in possession, or time is over
-        	if(!inPossession() || !(m_memory.getTime() < timelimit)){
-        	    //Send the distance the ball has traveled, and set game state to before_kick_off
-        		m_krislet.sendGameScore(distanceTraveled);
-        		m_krislet.signalEndOfGame(1);
-        		//Wait for the NEAT algorithm to mutate
-        		try{
-                    currentThread().sleep(100);
-                }catch(Exception e){
-                    System.out.println("cry");
-                }
-        		//Reset ball, and set game state to play_on
-                m_krislet.moveObject("ball", -19.5, 0);
-                m_krislet.signalEndOfGame(0);
-            }
+			//Check if a pass has been made, determine if its successful, and reset
+            checkForPass(ball, players);
         }
     }
 
-    public void fourMan(){
+    public void threeManNoVision(){
 	    //Get team name from a random player
         PlayerInfo player1 = (PlayerInfo) m_memory.getObject("player");
         if (player1 != null){
             String team1 = player1.getTeamName();
-            m_krislet.moveObject("player " + team1 + " 1", -getRandomInRange(20), getRandomInRange(0));
-            m_krislet.moveObject("player " + team1 + " 2", getRandomInRange(20), 0);
-            m_krislet.moveObject("player " + team1 + " 3", getRandomInRange(0), -getRandomInRange(20));
-            m_krislet.moveObject("player " + team1 + " 4", getRandomInRange(0), getRandomInRange(20));
-            m_krislet.moveObject("ball", -19.5, 0);
+            m_krislet.moveObject("player " + team1 + " 1", 0,0);
+            m_krislet.moveObject("player " + team1 + " 2", getRandomInRange(0, 20), getRandomInRange(0,20));
+            m_krislet.moveObject("player " + team1 + " 3", getRandomInRange(0, 20), getRandomInRange(0,20));
+            m_krislet.moveObject("ball", 0, 0);
         }
-
     }
 
-    public int getRandomInRange(int number){
+    public void threeManVision(){
+		//Get team name from a random player
+		PlayerInfo player1 = (PlayerInfo) m_memory.getObject("player");
+		if (player1 != null){
+			String team1 = player1.getTeamName();
+			m_krislet.moveObject("player " + team1 + " 1", 0,0);
+			m_krislet.moveObject("player " + team1 + " 2", getRandomInRange(25, 15), getRandomInRange(0,10));
+			m_krislet.moveObject("player " + team1 + " 3", getRandomInRange(25, 15), getRandomInRange(0,10));
+			m_krislet.moveObject("ball", 0, 0);
+		}
+	}
+
+    public void checkForPass(ObjectInfo ball, List<PlayerInfo> players){
+		//check if a pass was successful or not
+		if(ball.m_deltaX < Math.abs(0.1) &&  ball.m_deltaY < Math.abs(0.1) && ball.m_X != 0 && ball.m_Y != 0){
+			boolean pass = false;
+			for(PlayerInfo player : players){
+				if(player.getTeamNumber() != 1){
+					if(Math.abs(player.m_X - ball.m_X) + Math.abs(player.m_Y - ball.m_Y) < 2){
+						pass = true;
+						break;
+					}
+				}
+			}
+			if (pass){
+				succesfulPasses += 1;
+				threeManNoVision();
+			}
+			else {
+				//Send the amount of successful passes, and set game state to before_kick_off
+				m_krislet.sendGameScore(succesfulPasses);
+				m_krislet.signalEndOfGame(1);
+				//Wait for NEAT algorithm to mutate
+				try{
+					currentThread().sleep(100);
+				}catch(Exception e){
+					System.out.println("cry");
+				}
+				//Reset ball and players, and set game state to play_on
+				threeManVision();
+				m_krislet.signalEndOfGame(0);
+			}
+		}
+	}
+
+    public int getRandomInRange(int number, int deviation){
         Random rand = new Random();
-        int max = number + 5;
-        int min = number - 5;
-        return rand.nextInt(max - min + 1) + min;
+        int max = number + deviation;
+        int min = number - deviation;
+        int returnnumber = 0;
+        while(returnnumber == 0) {
+			returnnumber = rand.nextInt(max - min + 1) + min;
+		}
+        return returnnumber;
     }
 
     public boolean inPossession(){
@@ -253,6 +290,7 @@ class Brain extends Thread implements SensorInput
     public double distanceTraveled = 0;
     private double ballX = 0;
 	private double ballY = 0;
+	private int succesfulPasses = 0;
 
 }
 

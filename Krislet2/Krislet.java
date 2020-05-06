@@ -154,8 +154,8 @@ class Krislet implements SendCommand
 		send("(move (" + object + ") " + x + " " + y + ")");
 	}
 
-	public void sendGameScore(double distanceTraveled){
-		send("(say " + distanceTraveled + ")");
+	public void sendGameScore(int successfulPasses){
+		send("(say " + successfulPasses + ")");
 	}
 
 	public void signalEndOfGame(int type){
