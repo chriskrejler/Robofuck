@@ -155,7 +155,7 @@ class Krislet implements SendCommand
 	}
 
 	public void sendGameScore(int successfulPasses){
-		send("(say " + successfulPasses + ")");
+		send("(say passes " + successfulPasses + ")");
 	}
 
 	public void signalEndOfGame(int type){
