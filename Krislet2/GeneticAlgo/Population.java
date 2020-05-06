@@ -55,17 +55,13 @@ class Population {
 
         bestPlayerNo = maxIndex;
 
-        if (players[maxIndex].won) {//if a player won
-
-            //reset the population
-            Player[] newPlayers = new Player[players.length];//Create new players array for the next generation
-            ballsSunk = players[bestPlayerNo].shots;
-            for (int i =0; i< players.length; i++) {//for each player
-                newPlayers[i] = players[bestPlayerNo].clone(brain);//set it as the clone of the best player
-            }
-
-            players = newPlayers.clone();
+        //reset the population
+        Player[] newPlayers = new Player[players.length];//Create new players array for the next generation
+        ballsSunk = players[bestPlayerNo].shots;
+        for (int i =0; i< players.length; i++) {//for each player
+            newPlayers[i] = players[bestPlayerNo].clone(brain);//set it as the clone of the best player
         }
+        players = newPlayers.clone();
     }
 
 
@@ -102,7 +98,7 @@ class Population {
     //if all the games are finished then return true
     boolean done() {
         for (int i =1; i< players.length; i++) {
-            if (!players[i].gameOver|| !players[i].done) {
+            if (!players[i].done) {
                 return false;
             }
         }
@@ -116,7 +112,7 @@ class Population {
         setBestPlayer();//get the best player
         ballsSunk = players[bestPlayerNo].shots;
         for (int i =0; i< players.length; i++) {//for each player
-            newPlayers[i] = players[bestPlayerNo].clone();//set the player as a clone of the best
+            newPlayers[i] = players[bestPlayerNo].clone(brain);//set the player as a clone of the best
         }
 
         players = newPlayers.clone();
@@ -126,16 +122,14 @@ class Population {
     //natural selection for the genetic algorithm
     void naturalSelection() {
         //Reset world
-
-
         Player[] newPlayers = new Player[players.length];//Create new players array for the next generation
 
         setBestPlayer();//set which player is the best
 
-        newPlayers[0] = players[bestPlayerNo].clone();//add the best player of this generation to the next generation without mutation
+        newPlayers[0] = players[bestPlayerNo].clone(brain);//add the best player of this generation to the next generation without mutation
         for (int i = 1; i<players.length; i++) {
             //for each remaining spot in the next generation
-            newPlayers[i] = selectPlayer().clone();//select a random player(based on fitness) and clone it
+            newPlayers[i] = selectPlayer().clone(brain);//select a random player(based on fitness) and clone it
             newPlayers[i].DNA.mutate(); //mutate it
         }
 

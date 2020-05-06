@@ -7,7 +7,6 @@ import Krislet2.Memory;
 class Player {
     Genotype DNA;//the behaviour of the player
     float fitness;// the quality of the player used for natural selection
-    boolean gameOver = false;
     boolean done = false;
     Memory World;//the box2d world that the player is playing in
     Krislet Sender;
