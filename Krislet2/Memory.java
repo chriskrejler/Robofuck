@@ -4,6 +4,7 @@
 //	Date:			1997/04/28
 //
 
+import java.util.ArrayList;
 import java.util.List;
 
 class Memory
@@ -40,6 +41,19 @@ class Memory
 		}
 
 		return null;
+	}
+
+	public List<PlayerInfo> getPlayerList(){
+		if( m_info == null ) {
+			waitForNewInfo();
+		}
+		ArrayList<PlayerInfo> objectList = new ArrayList<>();
+		for (java.lang.Object o: m_info.m_objects){
+			if(((ObjectInfo)o).m_type.equals("player")){
+				objectList.add((PlayerInfo) o);
+			}
+		}
+		return objectList;
 	}
 
 	//---------------------------------------------------------------------------

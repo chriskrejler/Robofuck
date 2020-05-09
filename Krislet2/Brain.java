@@ -6,6 +6,7 @@
 //    Modified by:	Paul Marlow
 
 import java.lang.Math;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -45,12 +46,19 @@ class Brain extends Thread implements SensorInput
         ballX = ballTemp.m_X;
         ballY = ballTemp.m_Y;
 
-        threeManVision();
+        ArrayList<PlayerInfo> players = (ArrayList<PlayerInfo>) m_memory.getPlayerList();
+
+		while(players.isEmpty()){
+			players = (ArrayList<PlayerInfo>) m_memory.getPlayerList();
+		}
+
+		passSituation(players);
 
         while (true) {
+        	//m_krislet.send("hear referee 0 play_on");
         	//Collect amount of distance ball traveled
 			ObjectInfo ball = m_memory.getObject("ball");
-			List<PlayerInfo> players = m_memory.getPlyerInfo();
+			players = (ArrayList<PlayerInfo>) m_memory.getPlayerList();
 			//Dist traveled is sqrt of a^2 + b^2
 			/*
 			distanceTraveled = Math.sqrt(
@@ -60,6 +68,7 @@ class Brain extends Thread implements SensorInput
 
 			//Check if a pass has been made, determine if its successful, and reset
             checkForPass(ball, players);
+			System.out.println(gameState);
         }
     }
 
@@ -87,12 +96,29 @@ class Brain extends Thread implements SensorInput
 		}
 	}
 
-    public void checkForPass(ObjectInfo ball, List<PlayerInfo> players){
+	public void passSituation(ArrayList<PlayerInfo> players){
+		PlayerInfo player1 = (PlayerInfo) m_memory.getObject("player");
+		if(player1 != null) {
+			team1 = players.get(0).getTeamName();
+			for (PlayerInfo player : players) {
+				if (!team1.equals(player.getTeamName())) {
+					team2 = player.getTeamName();
+					break;
+				}
+			}
+			m_krislet.moveObject("player " + team1 + " 1", 0, 0);
+			m_krislet.moveObject("player " + team1 + " 2", getRandomInRange(30, 20), getRandomInRange(0, 10));
+			m_krislet.moveObject("player " + team2 + " 1", getRandomInRange(30, 20), getRandomInRange(0, 10));
+			m_krislet.moveObject("ball", 0, 0);
+		}
+	}
+
+    public void checkForPass(ObjectInfo ball, ArrayList<PlayerInfo> players){
 		//check if a pass was successful or not
 		if(ball.m_deltaX < Math.abs(0.1) &&  ball.m_deltaY < Math.abs(0.1) && ball.m_X != 0 && ball.m_Y != 0){
 			boolean pass = false;
 			for(PlayerInfo player : players){
-				if(player.getTeamNumber() != 1){
+				if(player.getTeamNumber() != 1 && player.getTeamName().equals(team1)){
 					if(Math.abs(player.m_X - ball.m_X) + Math.abs(player.m_Y - ball.m_Y) < 2){
 						pass = true;
 						break;
@@ -114,7 +140,7 @@ class Brain extends Thread implements SensorInput
 					System.out.println("cry");
 				}
 				//Reset ball and players, and set game state to play_on
-				threeManVision();
+				passSituation(players);
 				m_krislet.signalEndOfGame(0);
 			}
 		}
@@ -147,12 +173,6 @@ class Brain extends Thread implements SensorInput
         }
         return true;
     }
-
-
-
-
-
-
 
 	public void setGameState(States.gameState gs){
 		gameState = gs;
@@ -204,6 +224,7 @@ class Brain extends Thread implements SensorInput
     //---------------------------------------------------------------------------
     // This function receives hear information from referee
     public void hear(int time, String message) {
+		System.out.println(message);
 
 		StringTokenizer tokenizer = new StringTokenizer(message,"() ", true);
 		String token;
@@ -290,6 +311,8 @@ class Brain extends Thread implements SensorInput
     public double distanceTraveled = 0;
     private double ballX = 0;
 	private double ballY = 0;
+	private String team1 = "temp1";
+	private String team2 = "temp2";
 	private int succesfulPasses = 0;
 
 }
