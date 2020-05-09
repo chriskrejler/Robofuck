@@ -169,6 +169,8 @@ public class Brain extends Thread implements SensorInput {
     // This function receives hear information from referee
     public void hear(int time, String message) {
 
+		System.out.println(message);
+
 		StringTokenizer tokenizer = new StringTokenizer(message,"() ", true);
 		String token;
 
