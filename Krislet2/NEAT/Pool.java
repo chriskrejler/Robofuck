@@ -79,7 +79,6 @@ public class Pool {
                 allGenome.add(g);
             }
         }
-
  /*       for(int i =0; i<allGenome.size(); i++){
             for(int j = 0; j<allGenome.size(); j++){
                 if(i!=j){
@@ -89,7 +88,6 @@ public class Pool {
                 }
             }
         }*/
-
         environment.evaluateFitness(allGenome);
         rankGlobally();
     }

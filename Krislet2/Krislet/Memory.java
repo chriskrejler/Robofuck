@@ -39,19 +39,23 @@ class Memory
 	}
 
 	public Pair<PlayerInfo, PlayerInfo> getPlayers(){
+		boolean notNull = false;
 		PlayerInfo teammate = null;
 		PlayerInfo enemy = null;
 
-		for (java.lang.Object o: m_info.m_objects)
-		{
-			if( ((ObjectInfo)o).m_type.equals("player")){
-				if(((ObjectInfo) o).m_teamName == "hash"){
-					teammate = (PlayerInfo) o;
-				}else{
-					enemy = (PlayerInfo) o;
+		while(!notNull) {
+			for (java.lang.Object o : m_info.m_objects) {
+				if (((ObjectInfo) o).m_type.equals("player")) {
+					if (((ObjectInfo) o).m_teamName.equals("NEAT")) {
+						teammate = (PlayerInfo) o;
+					} else {
+						enemy = (PlayerInfo) o;
+					}
 				}
 			}
-
+			if((teammate != null) && (enemy != null)){
+				notNull = true;
+			}
 		}
 		return new Pair(teammate, enemy);
 	}

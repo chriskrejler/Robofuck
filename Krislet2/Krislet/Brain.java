@@ -5,6 +5,9 @@ package Krislet;//
 //
 //    Modified by:	Paul Marlow
 
+import NEAT.Genome;
+import NEAT.Implementation.Player;
+
 import java.lang.Math;
 import java.util.StringTokenizer;
 
@@ -14,7 +17,6 @@ public class Brain extends Thread implements SensorInput {
     //---------------------------------------------------------------------------
     // This constructor:
     // - stores connection to krislet
-    // - starts thread for this object
     public Brain(SendCommand krislet, String team,
                  char side, int number, String playMode) {
         m_timeOver = false;
@@ -24,45 +26,51 @@ public class Brain extends Thread implements SensorInput {
         m_side = side;
 //		m_number = number;
 //		m_playMode = playMode;
-        start();
+		player = new Player(this);
     }
 
 
-    //---------------------------------------------------------------------------
-    // This is main brain function used to make decision
-    // In each cycle we decide which command to issue based on
-    // current situation. the rules are:
-    //
-    //	1. If you don'first know where is ball then turn right and wait for new info
-    //
-    //	2. If ball is too far to kick it then
-    //		2.1. If we are directed towards the ball then go to the ball
-    //		2.2. else turn to the ball
-    //
-    //	3. If we dont know where is opponent goal then turn wait
-    //				and wait for new info
-    //
-    //	4. Kick ball
-    //
-    //	To ensure that we don'first send commands to often after each cycle
-    //	we waits one simulator steps. (This of course should be done better)
-    public void run() {
-        updatePlayers();
+
+    public int run(Genome gene) {
+    	boolean running = true;
+    	int shots = 0;
+		Pair<PlayerInfo, PlayerInfo> teammateEnemy;
+		float[] inputs = new float[4];
+		float[] outputs;
 
 
+		while(running) {
+			if (gameState == States.gameState.PLAY_ON) {
+				teammateEnemy = m_memory.getPlayers();
+				inputs[0] = teammateEnemy.first.m_direction;
+				inputs[1] = teammateEnemy.first.m_distance;
+				inputs[2] = teammateEnemy.second.m_direction;
+				inputs[3] = teammateEnemy.second.m_distance;
 
+				outputs = gene.evaluateNetwork(inputs);
+				System.out.println("Angle: " + outputs[0] + " Power: " + outputs[1]);
 
+				m_krislet.kick(outputs[0], outputs[1]);
+
+				while (true) {
+					if (gameState == States.gameState.GOAL_R) {
+						shots++;
+						break;
+					} else if (gameState == States.gameState.GOAL_L) {
+						running = false;
+						break;
+					}
+				}
+				System.out.println(shots);
+			}
+		}
+		return shots;
     }
 
 
     //===========================================================================
 // Here are suporting functions for implement logic
 
-    public void updatePlayers(){
-        Pair<PlayerInfo, PlayerInfo> players = m_memory.getPlayers();
-        teammate = new Pair(players.first.m_direction, players.first.m_distance);
-        enemy = new Pair(players.second.m_direction, players.second.m_distance);
-    }
 
 	public void setGameState(States.gameState gs){
 		gameState = gs;
@@ -232,17 +240,15 @@ public class Brain extends Thread implements SensorInput {
 					break;
 			}
 		}
-
 	}
 
 
     //===========================================================================
 // Private members
-    private SendCommand m_krislet;            // robot which is controled by this brain
+    public SendCommand m_krislet;            // robot which is controled by this brain
     public Memory m_memory;                // place where all information is stored
     private char m_side;
     volatile private boolean m_timeOver;
-    public Pair<Double, Double> teammate;
-    public Pair<Double, Double> enemy;
+    public Player player;
 }
 
