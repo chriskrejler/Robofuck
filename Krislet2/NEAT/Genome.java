@@ -1,437 +1,475 @@
 package NEAT;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
+import NEAT.com.evo.NEAT.config.NEAT_Config;
 
-public class Genome {
-    int nextConnectionNo = 1000;
-    ArrayList<ConnectionGene> genes;
-    ArrayList<Node> nodes;
-    int inputs;
-    double outputs;
-    int layers = 2;
-    int nextNode = 0; // TODO: Han sætter den til 0 her?
-    int biasNode;
-    ArrayList<Node> network; //a list of the this.nodes in the order that they need to be considered in the NN
+import javax.management.RuntimeErrorException;
+import java.io.*;
+import java.util.*;
 
-    public Genome(int inputs, double outputs, boolean crossover) {
-        this.inputs = inputs;
-        this.outputs = outputs;
+/**
+ * Created by vishnughosh on 28/02/17.
+ */
+public class Genome implements Comparable {
+    private static Random rand = new Random();
+    private float fitness;                                          // Global Percentile Rank (higher the better)
+    private float points;
+    private ArrayList<ConnectionGene> connectionGeneList = new ArrayList<>();           // DNA- MAin archive of gene information
+    private TreeMap<Integer, NodeGene> nodes = new TreeMap<>();                          // Generated while performing network operation
+    private float adjustedFitness;                                      // For number of child to breed in species
 
-        // TODO: Det her giver jo ingen mening
-        if (crossover){
-            return;
-        }
+    private HashMap<MutationKeys, Float> mutationRates = new HashMap<>();
 
-        for (var i = 0; i < this.inputs; i++) {
-            this.nodes.add(new Node(i));
-            this.nextNode++;
-            this.nodes.get(i).setLayer(0);
-        }
-
-        //create output this.nodes
-        for (var i = 0; i < this.outputs; i++) {
-            this.nodes.add(new Node(i + this.inputs));
-            this.nodes.get(i+this.inputs).setLayer(1);
-            this.nextNode++;
-        }
-
-        this.nodes.add(new Node(this.nextNode)); //bias node
-        this.biasNode = this.nextNode;
-        this.nextNode++;
-        this.nodes.get(this.biasNode).setLayer(0);
+    private enum MutationKeys {
+        STEPS,
+        PERTURB_CHANCE,
+        WEIGHT_CHANCE,
+        WEIGHT_MUTATION_CHANCE,
+        NODE_MUTATION_CHANCE,
+        CONNECTION_MUTATION_CHANCE,
+        BIAS_CONNECTION_MUTATION_CHANCE,
+        DISABLE_MUTATION_CHANCE,
+        ENABLE_MUTATION_CHANCE
     }
+    /*    private class MutationRates{
+            float STEPS;
+            float PERTURB_CHANCE;
+            float WEIGHT_CHANCE;
+            float WEIGHT_MUTATION_CHANCE;
+            float NODE_MUTATION_CHANCE;
+            float CONNECTION_MUTATION_CHANCE;
+            float BIAS_CONNECTION_MUTATION_CHANCE;
+            float DISABLE_MUTATION_CHANCE;
+            float ENABLE_MUTATION_CHANCE;
 
-    public void fullyConnect (ArrayList<ConnectionHistory> innovationHistory) {
-        //this will be a new number if no identical genome has mutated in the same
-
-        for (var i = 0; i < this.inputs; i++) {
-            for (var j = 0; j < this.outputs; j++) {
-                double connectionInnovationNumber = this.getInnovationNumber(innovationHistory, this.nodes.get(i), this.nodes.get(this.nodes.size() - j - 2));
-                this.genes.add(new ConnectionGene(this.nodes.get(i), this.nodes.get(this.nodes.size()- j - 2), randomDouble(-1, 0), connectionInnovationNumber));
+             MutationRates() {
+                this.STEPS = NEAT_Config.STEPS;
+                this.PERTURB_CHANCE = NEAT_Config.PERTURB_CHANCE;
+                this.WEIGHT_CHANCE = NEAT_Config.WEIGHT_CHANCE;
+                this.WEIGHT_MUTATION_CHANCE = NEAT_Config.WEIGHT_MUTATION_CHANCE;
+                this.NODE_MUTATION_CHANCE = NEAT_Config.NODE_MUTATION_CHANCE;
+                this.CONNECTION_MUTATION_CHANCE = NEAT_Config.CONNECTION_MUTATION_CHANCE;
+                this.BIAS_CONNECTION_MUTATION_CHANCE = NEAT_Config.BIAS_CONNECTION_MUTATION_CHANCE;
+                this.DISABLE_MUTATION_CHANCE = NEAT_Config.DISABLE_MUTATION_CHANCE;
+                this.ENABLE_MUTATION_CHANCE = NEAT_Config.ENABLE_MUTATION_CHANCE;
             }
-        }
+        }*/
+    public Genome(){
 
-        double connectionInnovationNumber = this.getInnovationNumber(innovationHistory, this.nodes.get(this.biasNode), this.nodes.get(this.nodes.size() - 2));
-        this.genes.add(new ConnectionGene(this.nodes.get(this.biasNode), this.nodes.get(this.nodes.size() - 2), randomDouble(-1, 0), connectionInnovationNumber));
-
-        connectionInnovationNumber = this.getInnovationNumber(innovationHistory, this.nodes.get(this.biasNode), this.nodes.get(this.nodes.size() - 3));
-        this.genes.add(new ConnectionGene(this.nodes.get(this.biasNode), this.nodes.get(this.nodes.size() - 3), randomDouble(-1, 0), connectionInnovationNumber));
-        //add the connection with a random array
-
-
-        //changed this so if error here
-        this.connectNodes();
+        this.mutationRates.put(MutationKeys.STEPS, NEAT_Config.STEPS);
+        this.mutationRates.put(MutationKeys.PERTURB_CHANCE, NEAT_Config.PERTURB_CHANCE);
+        this.mutationRates.put(MutationKeys.WEIGHT_CHANCE,NEAT_Config.WEIGHT_CHANCE);
+        this.mutationRates.put(MutationKeys.WEIGHT_MUTATION_CHANCE, NEAT_Config.WEIGHT_MUTATION_CHANCE);
+        this.mutationRates.put(MutationKeys.NODE_MUTATION_CHANCE , NEAT_Config.NODE_MUTATION_CHANCE);
+        this.mutationRates.put(MutationKeys.CONNECTION_MUTATION_CHANCE , NEAT_Config.CONNECTION_MUTATION_CHANCE);
+        this.mutationRates.put(MutationKeys.BIAS_CONNECTION_MUTATION_CHANCE , NEAT_Config.BIAS_CONNECTION_MUTATION_CHANCE);
+        this.mutationRates.put(MutationKeys.DISABLE_MUTATION_CHANCE , NEAT_Config.DISABLE_MUTATION_CHANCE);
+        this.mutationRates.put(MutationKeys.ENABLE_MUTATION_CHANCE , NEAT_Config.ENABLE_MUTATION_CHANCE);
     }
 
-    //adds the conenctions going out of a node to that node so that it can acess the next node during feeding forward
-    public void connectNodes() {
+    public Genome(Genome child) {
 
-        for (var i = 0; i < this.nodes.size(); i++) { //clear the connections
-            this.nodes.get(i).outputConnections.clear();
+        for (ConnectionGene c:child.connectionGeneList){
+            this.connectionGeneList.add(new ConnectionGene(c));
         }
 
-        for (var i = 0; i < this.genes.size(); i++) { //for each connectionGene
-            this.genes.get(i).getFromNode().outputConnections.add(this.genes.get(i)); //add it to node
-        }
+        this.fitness = child.fitness;
+        this.adjustedFitness = child.adjustedFitness;
+
+        this.mutationRates = (HashMap<MutationKeys, Float>) child.mutationRates.clone();
+
     }
 
-    //-------------------------------------------------------------------------------------------------------------------------------------------
-    //returns the innovation number for the new mutation
-    //if this mutation has never been seen before then it will be given a new unique innovation number
-    //if this mutation matches a previous mutation then it will be given the same innovation number as the previous one
-    public double getInnovationNumber(ArrayList<ConnectionHistory> innovationHistory, Node fromNode, Node toNode) {
-        boolean isNew = true;
-        double connectionInnovationNumber = nextConnectionNo; // TODO: Global variabel i hans
-        for (var i = 0; i < innovationHistory.size(); i++) { //for each previous mutation
-            if (innovationHistory.get(i).matches(this, fromNode, toNode)) { //if match found
-                isNew = false; //its not a new mutation
-                connectionInnovationNumber = innovationHistory.get(i).getInovationNumber(); //set the innovation number as the innovation number of the match
-                break;
-            }
-        }
 
-        if (isNew) { //if the mutation is new then create an arrayList of varegers representing the current state of the genome
-            ArrayList<Double> innoNumbers = new ArrayList<>();
-            for (var i = 0; i < this.genes.size(); i++) { //set the innovation numbers
-                innoNumbers.add(this.genes.get(i).getInnovationNo());
-            }
-
-            //then add this mutation to the innovationHistory
-            innovationHistory.add(new ConnectionHistory(fromNode.getNumber(), toNode.getNumber(), connectionInnovationNumber, innoNumbers));
-            nextConnectionNo++;
-        }
-        return connectionInnovationNumber;
+    public float getFitness() {
+        return fitness;
     }
 
-    public double randomDouble(int min, int max) {
-        return Math.random() * (max - min + 1) + min;
+    public void setFitness(float fitness) {
+        this.fitness = fitness;
     }
 
-    public double randomInteger(int min, int max) {
-        return (int)(Math.random() * max - min + 1) + min;
+    // Can remove below setter-getter after testing
+    public ArrayList<ConnectionGene> getConnectionGeneList() {
+        return connectionGeneList;
     }
 
-    //returns the node with a matching number
-    //sometimes the this.nodes will not be in order
-    public Node getNode(int nodeNumber) {
-        for (var i = 0; i < this.nodes.size(); i++) {
-            if (this.nodes.get(i).getNumber() == nodeNumber) {
-                return this.nodes.get(i);
-            }
-        }
-        return null;
+    public void setConnectionGeneList(ArrayList<ConnectionGene> connectionGeneList) {
+        this.connectionGeneList = connectionGeneList;
     }
 
-    //feeding in input values varo the NN and returning output array
-    public ArrayList<Double> feedForward(ArrayList<Double> inputValues) {
-        //set the outputs of the input this.nodes
-        for (var i = 0; i < this.inputs; i++) {
-            this.nodes.get(i).setOutputValue(inputValues.get(i));
-        }
-        this.nodes.get(this.biasNode).setOutputValue(1); //output of bias is 1
-
-        for (var i = 0; i < this.network.size(); i++) { //for each node in the network engage it(see node class for what this does)
-            this.network.get(i).engage();
+    public static Genome crossOver(Genome parent1, Genome parent2){
+        if(parent1.fitness < parent2.fitness){
+            Genome temp = parent1;
+            parent1 = parent2;
+            parent2 = temp;
         }
 
-        //the outputs are this.nodes[inputs] to this.nodes [inputs+outputs-1]
-        ArrayList<Double> outs = new ArrayList<>();
-        for (var i = 0; i < this.outputs; i++) {
-            outs.add(this.nodes.get(this.inputs + i).getOutputValue());
+        Genome child = new Genome();
+        TreeMap<Integer, ConnectionGene> geneMap1 = new TreeMap<>();
+        TreeMap<Integer, ConnectionGene> geneMap2 = new TreeMap<>();
+
+        for(ConnectionGene con: parent1.connectionGeneList){
+            assert  !geneMap1.containsKey(con.getInnovation());             //TODO Remove for better performance
+            geneMap1.put(con.getInnovation(), con);
         }
 
-        for (var i = 0; i < this.nodes.size(); i++) { //reset all the this.nodes for the next feed forward
-            this.nodes.get(i).setInputSum(0);
+        for(ConnectionGene con: parent2.connectionGeneList){
+            assert  !geneMap2.containsKey(con.getInnovation());             //TODO Remove for better performance
+            geneMap2.put(con.getInnovation(), con);
         }
 
-        return outs;
+        Set<Integer> innovationP1 = geneMap1.keySet();
+        Set<Integer> innovationP2 = geneMap2.keySet();
+
+        Set<Integer> allInnovations = new HashSet<Integer>(innovationP1);
+        allInnovations.addAll(innovationP2);
+
+        for(int key : allInnovations){
+            ConnectionGene trait;
+
+            if(geneMap1.containsKey(key) && geneMap2.containsKey(key)){
+                if(rand.nextBoolean()){
+                    trait = new ConnectionGene(geneMap1.get(key));
+                }else {
+                    trait = new ConnectionGene(geneMap2.get(key));
+                }
+
+                if((geneMap1.get(key).isEnabled()!=geneMap2.get(key).isEnabled())){
+                    if( (rand.nextFloat()<0.75f ))
+                        trait.setEnabled(false);
+                    else
+                        trait.setEnabled(true);
+                }
+
+            }else if(parent1.getFitness()==parent2.getFitness()){               // disjoint or excess and equal fitness
+                if(geneMap1.containsKey(key))
+                    trait = geneMap1.get(key);
+                else
+                    trait = geneMap2.get(key);
+
+                if(rand.nextBoolean()){
+                    continue;
+                }
+
+            }else
+                trait = geneMap1.get(key);
+
+
+            child.connectionGeneList.add(trait);
+        }
+
+
+        return child;
+
     }
 
-    //sets up the NN as a list of this.nodes in order to be engaged
 
-    public void generateNetwork() {
-        this.connectNodes();
-        this.network.clear();
-        //for each layer add the node in that layer, since layers cannot connect to themselves there is no need to order the this.nodes within a layer
+    public static boolean isSameSpecies(Genome g1, Genome g2){
+        TreeMap<Integer, ConnectionGene> geneMap1 = new TreeMap<>();
+        TreeMap<Integer, ConnectionGene> geneMap2 = new TreeMap<>();
 
-        for (var l = 0; l < this.layers; l++) { //for each layer
-            for (var i = 0; i < this.nodes.size(); i++) { //for each node
-                if (this.nodes.get(i).getLayer() == l) { //if that node is in that layer
-                    this.network.add(this.nodes.get(i));
+        int matching = 0;
+        int disjoint = 0;
+        int excess = 0;
+        float weight = 0;
+        int lowMaxInnovation;
+        float delta = 0;
+
+        for(ConnectionGene con: g1.connectionGeneList) {
+            assert  !geneMap1.containsKey(con.getInnovation());             //TODO Remove for better performance
+            geneMap1.put(con.getInnovation(), con);
+        }
+
+        for(ConnectionGene con: g2.connectionGeneList) {
+            assert  !geneMap2.containsKey(con.getInnovation());             //TODO Remove for better performance
+            geneMap2.put(con.getInnovation(), con);
+        }
+        if(geneMap1.isEmpty() || geneMap2.isEmpty())
+            lowMaxInnovation = 0;
+        else
+            lowMaxInnovation = Math.min(geneMap1.lastKey(),geneMap2.lastKey());
+
+        Set<Integer> innovationP1 = geneMap1.keySet();
+        Set<Integer> innovationP2 = geneMap2.keySet();
+
+        Set<Integer> allInnovations = new HashSet<Integer>(innovationP1);
+        allInnovations.addAll(innovationP2);
+
+        for(int key : allInnovations){
+
+            if(geneMap1.containsKey(key) && geneMap2.containsKey(key)){
+                matching ++;
+                weight += Math.abs(geneMap1.get(key).getWeight() - geneMap2.get(key).getWeight());
+            }else {
+                if(key < lowMaxInnovation){
+                    disjoint++;
+                }else{
+                    excess++;
                 }
             }
+
         }
+
+        //System.out.println("matching : "+matching + "\ndisjoint : "+ disjoint + "\nExcess : "+ excess +"\nWeight : "+ weight);
+
+        int N = matching+disjoint+excess ;
+
+        if(N>0)
+            delta = (NEAT_Config.EXCESS_COEFFICENT * excess + NEAT_Config.DISJOINT_COEFFICENT * disjoint) / N + (NEAT_Config.WEIGHT_COEFFICENT * weight) / matching;
+
+        return delta < NEAT_Config.COMPATIBILITY_THRESHOLD;
+
     }
 
+    private void generateNetwork() {
 
-    //mutate the NN by adding a new node
-    //it does this by picking a random connection and disabling it then 2 new connections are added
-    //1 between the input node of the disabled connection and the new node
-    //and the other between the new node and the output of the disabled connection
-    public void addNode(ArrayList<ConnectionHistory> innovationHistory) {
-        //pick a random connection to create a node between
-        if (this.genes.size() == 0) {
-            this.addConnection(innovationHistory);
-            return;
+        nodes.clear();
+        //  Input layer
+        for (int i = 0; i < NEAT_Config.INPUTS; i++) {
+            nodes.put(i, new NodeGene(0));                    //Inputs
         }
-        int randomConnection = (int) Math.floor(randomInteger(0, this.genes.size()));
+        nodes.put(NEAT_Config.INPUTS, new NodeGene(1));        // Bias
 
-        while (this.genes.get(randomConnection).getFromNode() == this.nodes.get(this.biasNode) && this.genes.size() != 1) { //dont disconnect bias
-            randomConnection = (int) Math.floor(randomInteger(0, this.genes.size()));
+        //output layer
+        for (int i = NEAT_Config.INPUTS + NEAT_Config.HIDDEN_NODES; i < NEAT_Config.INPUTS + NEAT_Config.HIDDEN_NODES + NEAT_Config.OUTPUTS; i++) {
+            nodes.put(i, new NodeGene(0));
         }
 
-        this.genes.get(randomConnection).setEnabled(false); //disable it
-
-        var newNodeNo = this.nextNode;
-        this.nodes.add(new Node(newNodeNo));
-        this.nextNode++;
-        //add a new connection to the new node with a weight of 1
-        var connectionInnovationNumber = this.getInnovationNumber(innovationHistory, this.genes.get(randomConnection).getFromNode(), this.getNode(newNodeNo));
-        this.genes.add(new ConnectionGene(this.genes.get(randomConnection).getFromNode(), this.getNode(newNodeNo), 1, connectionInnovationNumber));
-
-
-        connectionInnovationNumber = this.getInnovationNumber(innovationHistory, this.getNode(newNodeNo), this.genes.get(randomConnection).getToNode());
-        //add a new connection from the new node with a weight the same as the disabled connection
-        this.genes.add(new ConnectionGene(this.getNode(newNodeNo), this.genes.get(randomConnection).getToNode(), this.genes.get(randomConnection).getWeight(), connectionInnovationNumber));
-        this.getNode(newNodeNo).setLayer(this.genes.get(randomConnection).getFromNode().getLayer() + 1);
-
-
-        connectionInnovationNumber = this.getInnovationNumber(innovationHistory, this.nodes.get(this.biasNode), this.getNode(newNodeNo));
-        //connect the bias to the new node with a weight of 0
-        this.genes.add(new ConnectionGene(this.nodes.get(this.biasNode), this.getNode(newNodeNo), 0, connectionInnovationNumber));
-
-        //if the layer of the new node is equal to the layer of the output node of the old connection then a new layer needs to be created
-        //more accurately the layer numbers of all layers equal to or greater than this new node need to be incrimented
-        if (this.getNode(newNodeNo).getLayer() == this.genes.get(randomConnection).getToNode().getLayer()) {
-            for (var i = 0; i < this.nodes.size() - 1; i++) { //dont include this newest node
-                if (this.nodes.get(i).getLayer() >= this.getNode(newNodeNo).getLayer()) {
-                    this.nodes.get(i).setLayer(this.nodes.get(i).getLayer() + 1);
-                }
-            }
-            this.layers++;
+        // hidden layer
+        for (ConnectionGene con : connectionGeneList) {
+            if (!nodes.containsKey(con.getInto()))
+                nodes.put(con.getInto(), new NodeGene(0));
+            if (!nodes.containsKey(con.getOut()))
+                nodes.put(con.getOut(), new NodeGene(0));
+            nodes.get(con.getOut()).getIncomingCon().add(con);
         }
-        this.connectNodes();
+
+
     }
 
+    public float[] evaluateNetwork(float[] inputs) {
+        float output[] = new float[NEAT_Config.OUTPUTS];
+        generateNetwork();
 
-    //------------------------------------------------------------------------------------------------------------------
-    //adds a connection between 2 this.nodes which aren't currently connected
-    public void addConnection(ArrayList<ConnectionHistory> innovationHistory) {
-        //cannot add a connection to a fully connected network
-        if (this.fullyConnected()) {
-            System.out.println("Connection failed");
-            return;
+        for (int i = 0; i < NEAT_Config.INPUTS; i++) {
+            nodes.get(i).setValue(inputs[i]);
         }
 
+        for (Map.Entry<Integer, NodeGene> mapEntry : nodes.entrySet()) {
+            float sum = 0;
+            int key = mapEntry.getKey();
+            NodeGene node = mapEntry.getValue();
 
-        //get random this.nodes
-        int randomNode1 = (int) Math.floor(randomInteger(0, this.nodes.size()));
-        int randomNode2 = (int) Math.floor(randomInteger(0, this.nodes.size()));
-        while (this.randomConnectionNodesAreShit(randomNode1, randomNode2)) { //while the random this.nodes are no good
-            //get new ones
-            randomNode1 = (int) Math.floor(randomInteger(0, this.nodes.size()));
-            randomNode2 = (int) Math.floor(randomInteger(0, this.nodes.size()));
-        }
-        int temp;
-        if (this.nodes.get(randomNode1).getLayer() > this.nodes.get(randomNode2).getLayer()) { //if the first random node is after the second then switch
-            temp = randomNode2;
-            randomNode2 = randomNode1;
-            randomNode1 = temp;
-        }
-
-        //get the innovation number of the connection
-        //this will be a new number if no identical genome has mutated in the same way
-        var connectionInnovationNumber = this.getInnovationNumber(innovationHistory, this.nodes.get(randomNode1), this.nodes.get(randomNode2));
-        //add the connection with a random array
-
-        this.genes.add(new ConnectionGene(this.nodes.get(randomNode1), this.nodes.get(randomNode2), randomDouble(-1, 0), connectionInnovationNumber)); //changed this so if error here
-        this.connectNodes();
-    }
-
-    //-------------------------------------------------------------------------------------------------------------------------------------------
-    public boolean randomConnectionNodesAreShit(int r1, int r2) {
-        if (this.nodes.get(r1).getLayer() == this.nodes.get(r2).getLayer()) return true; // if the this.nodes are in the same layer
-        if (this.nodes.get(r1).isConnectedTo(this.nodes.get(r2))) return true; //if the this.nodes are already connected
-
-
-
-        return false;
-    }
-
-
-    //returns whether the network is fully connected or not
-    public boolean fullyConnected() {
-        int maxConnections = 0;
-        ArrayList<Integer> nodesInLayers = new ArrayList<>(); //array which stored the amount of this.nodes in each layer
-
-        for (var i = 0; i < this.layers; i++) {
-            nodesInLayers.set(i, 0);
-        }
-        //populate array
-        for (var i = 0; i < this.nodes.size(); i++) {
-            nodesInLayers.set(this.nodes.get(i).getLayer(), this.nodes.get(i).getLayer()+1);
-        }
-        //for each layer the maximum amount of connections is the number in this layer * the number of this.nodes infront of it
-        //so lets add the max for each layer together and then we will get the maximum amount of connections in the network
-        for (var i = 0; i < this.layers - 1; i++) {
-            var nodesInFront = 0;
-            for (var j = i + 1; j < this.layers; j++) { //for each layer infront of this layer
-                nodesInFront += nodesInLayers.get(j); //add up this.nodes
-            }
-
-            maxConnections += nodesInLayers.get(i) * nodesInFront;
-        }
-
-        if (maxConnections <= this.genes.size()) { //if the number of connections is equal to the max number of connections possible then it is full
-            return true;
-        }
-
-        return false;
-    }
-
-
-    //-------------------------------------------------------------------------------------------------------------------------------
-    //mutates the genome
-    public void mutate(ArrayList<ConnectionHistory> innovationHistory) {
-        if (this.genes.size() == 0) {
-            this.addConnection(innovationHistory);
-        }
-
-
-        double rand1 = randomDouble(0,0);
-        if (rand1 < 0.8) { // 80% of the time mutate weights
-
-            for (var i = 0; i < this.genes.size(); i++) {
-                this.genes.get(i).mutateWeight();
-            }
-        }
-
-        //5% of the time add a new connection
-        double rand2 = randomDouble(0,0);
-        if (rand2 < 0.05) {
-
-            this.addConnection(innovationHistory);
-        }
-
-        //1% of the time add a node
-        double rand3 = randomDouble(0,0);
-        if (rand3 < 0.01) {
-
-            this.addNode(innovationHistory);
-        }
-    }
-
-
-    //---------------------------------------------------------------------------------------------------------------------------------
-    //called when this Genome is better that the other parent
-    public Genome crossover(Genome parent2) {
-        Genome child = new Genome(this.inputs, this.outputs, true);
-        child.genes.clear();
-        child.nodes.clear();
-        child.layers = this.layers;
-        child.nextNode = this.nextNode;
-        child.biasNode = this.biasNode;
-        ArrayList<ConnectionGene> childGenes = new ArrayList<>();
-        ArrayList<Boolean> isEnabled = new ArrayList<>();
-        // var childGenes = []; // new ArrayList<connectionGene>();//list of genes to be inherrited form the parents
-        //var isEnabled = []; // new ArrayList<Boolean>();
-        //all inherited genes
-        for (var i = 0; i < this.genes.size(); i++) {
-            boolean setEnabled = true; //is this node in the chlid going to be enabled
-
-            int parent2gene = this.matchingGene(parent2, (int) this.genes.get(i).getInnovationNo());
-            if (parent2gene != -1) { //if the genes match
-                if (!this.genes.get(i).isEnabled() || !parent2.genes.get(parent2gene).isEnabled()) { //if either of the matching genes are disabled
-
-                    if (randomDouble(0,0) < 0.75) { //75% of the time disabel the childs gene
-                        setEnabled = false;
+            if (key > NEAT_Config.INPUTS) {
+                for (ConnectionGene conn : node.getIncomingCon()) {
+                    if (conn.isEnabled()) {
+                        sum += nodes.get(conn.getInto()).getValue() * conn.getWeight();
                     }
                 }
-                double rand = randomDouble(0,0);
-                if (rand < 0.5) {
-                    childGenes.add(this.genes.get(i));
-
-                    //get gene from this fucker
-                } else {
-                    //get gene from parent2
-                    childGenes.add(parent2.genes.get(parent2gene));
-                }
-            } else { //disjoint or excess gene
-                childGenes.add(this.genes.get(i));
-                setEnabled = this.genes.get(i).isEnabled();
+                node.setValue(sigmoid(sum));
             }
-            isEnabled.add(setEnabled);
         }
 
-        //since all excess and disjovar genes are inherrited from the more fit parent (this Genome) the childs structure is no different from this parent | with exception of dormant connections being enabled but this wont effect this.nodes
-        //so all the this.nodes can be inherrited from this parent
-        for (var i = 0; i < this.nodes.size(); i++) {
-            child.nodes.add(this.nodes.get(i).clone());
+        for (int i = 0; i < NEAT_Config.OUTPUTS; i++) {
+            output[i] = nodes.get(NEAT_Config.INPUTS + NEAT_Config.HIDDEN_NODES + i).getValue();
         }
-
-        //clone all the connections so that they connect the childs new this.nodes
-
-        for (var i = 0; i < childGenes.size(); i++) {
-            child.genes.add(childGenes.get(i).clone(child.getNode(childGenes.get(i).getFromNode().getNumber()), child.getNode(childGenes.get(i).getToNode().getNumber())));
-            child.genes.get(i).setEnabled(isEnabled.get(i));
-        }
-
-        child.connectNodes();
-        return child;
+        return output;
     }
 
-        //----------------------------------------------------------------------------------------------------------------------------------------
-        //returns whether or not there is a gene matching the input innovation number  in the input genome
-        public int matchingGene(Genome parent2, int innovationNumber) {
-            for (var i = 0; i < parent2.genes.size(); i++) {
-                if (parent2.genes.get(i).getInnovationNo() == innovationNumber) {
-                    return i;
-                }
+    private float sigmoid(float x) {
+        // TODO Auto-generated method stub
+        return (float) (1 / (1 + Math.exp(-4.9 * x)));
+    }
+
+    // Mutations
+
+    public void Mutate() {
+        // Mutate mutation rates
+        for (Map.Entry<MutationKeys, Float> entry : mutationRates.entrySet()) {
+            if(rand.nextBoolean())
+                mutationRates.put(entry.getKey(), 0.95f * entry.getValue() );
+            else
+                mutationRates.put(entry.getKey(), 1.05263f * entry.getValue() );
+        }
+
+
+        if (rand.nextFloat() <= mutationRates.get(MutationKeys.WEIGHT_MUTATION_CHANCE))
+            mutateWeight();
+        if (rand.nextFloat() <= mutationRates.get(MutationKeys.CONNECTION_MUTATION_CHANCE))
+            mutateAddConnection(false);
+        if (rand.nextFloat() <= mutationRates.get(MutationKeys.BIAS_CONNECTION_MUTATION_CHANCE))
+            mutateAddConnection(true);
+        if (rand.nextFloat() <= mutationRates.get(MutationKeys.NODE_MUTATION_CHANCE))
+            mutateAddNode();
+        if (rand.nextFloat() <= mutationRates.get(MutationKeys.DISABLE_MUTATION_CHANCE))
+            disableMutate();
+        if (rand.nextFloat() <= mutationRates.get(MutationKeys.ENABLE_MUTATION_CHANCE))
+            enableMutate();
+    }
+
+    void mutateWeight() {
+
+        for (ConnectionGene c : connectionGeneList) {
+            if (rand.nextFloat() < NEAT_Config.WEIGHT_CHANCE) {
+                if (rand.nextFloat() < NEAT_Config.PERTURB_CHANCE)
+                    c.setWeight(c.getWeight() + (2 * rand.nextFloat() - 1) * NEAT_Config.STEPS);
+                else c.setWeight(4 * rand.nextFloat() - 2);
             }
-            return -1; //no matching gene found
+        }
+    }
+
+    void mutateAddConnection(boolean forceBais) {
+        generateNetwork();
+        int i = 0;
+        int j = 0;
+        int random2 = rand.nextInt(nodes.size() - NEAT_Config.INPUTS - 1) + NEAT_Config.INPUTS + 1;
+        int random1 = rand.nextInt(nodes.size());
+        if(forceBais)
+            random1 = NEAT_Config.INPUTS;
+        int node1 = -1;
+        int node2 = -1;
+
+        for (int k : nodes.keySet()) {
+            if (random1 == i) {
+                node1 = k;
+                break;
+            }
+            i++;
         }
 
-    //----------------------------------------------------------------------------------------------------------------------------------------
-    //prints out info about the genome to the console
-    public void printGenome() {
-        System.out.println("Prvar genome  layers:" + this.layers);
-        System.out.println("bias node: " + this.biasNode);
-        System.out.println("this.nodes");
-        for (var i = 0; i < this.nodes.size(); i++) {
-            System.out.println(this.nodes.get(i).getNumber() + ",");
+        for (int k : nodes.keySet()) {
+            if (random2 == j) {
+                node2 = k;
+                break;
+            }
+            j++;
         }
-        System.out.println("Genes");
-        for (var i = 0; i < this.genes.size(); i++) { //for each connectionGene
-            System.out.println("gene " + this.genes.get(i).getInnovationNo() + "From node " + this.genes.get(i).getFromNode().getNumber() + "To node " + this.genes.get(i).getToNode().getNumber() +
-                    "is enabled " + this.genes.get(i).isEnabled() + "from layer " + this.genes.get(i).getFromNode().getLayer() + "to layer " + this.genes.get(i).getToNode().getLayer() + "weight: " + this.genes.get(i).getWeight());
+//	System.out.println("random1 = "+random1 +" random2 = "+random2);
+//	System.out.println("Node1 = "+node1 +" node 2 = "+node2);
+
+
+        if (node1 >= node2)
+            return;
+
+        for (ConnectionGene con : nodes.get(node2).getIncomingCon()) {
+            if (con.getInto() == node1)
+                return;
         }
 
-        System.out.println("");
+        if (node1 < 0 || node2 < 0)
+            throw new RuntimeErrorException(null);          // TODO Pool.newInnovation(node1, node2)
+        connectionGeneList.add(new ConnectionGene(node1, node2, InnovationCounter.newInnovation(), 4 * rand.nextFloat() - 2, true));                // Add innovation and weight
+
+    }
+
+    void mutateAddNode() {
+        generateNetwork();
+        if (connectionGeneList.size() > 0) {
+            int timeoutCount = 0;
+            ConnectionGene randomCon = connectionGeneList.get(rand.nextInt(connectionGeneList.size()));
+            while (!randomCon.isEnabled()) {
+                randomCon = connectionGeneList.get(rand.nextInt(connectionGeneList.size()));
+                timeoutCount++;
+                if (timeoutCount > NEAT_Config.HIDDEN_NODES)
+                    return;
+            }
+            int nextNode = nodes.size() - NEAT_Config.OUTPUTS;
+            randomCon.setEnabled(false);
+            connectionGeneList.add(new ConnectionGene(randomCon.getInto(), nextNode, InnovationCounter.newInnovation(), 1, true));        // Add innovation and weight
+            connectionGeneList.add(new ConnectionGene(nextNode, randomCon.getOut(), InnovationCounter.newInnovation(), randomCon.getWeight(), true));
+        }
+    }
+    void disableMutate() {
+        //generateNetwork();                // remove laters
+        if (connectionGeneList.size() > 0) {
+            ConnectionGene randomCon = connectionGeneList.get(rand.nextInt(connectionGeneList.size()));
+            randomCon.setEnabled(false);
+        }
     }
 
 
-    //----------------------------------------------------------------------------------------------------------------------------------------
-    //returns a copy of this genome
-    public Genome clone() {
-
-        Genome clone = new Genome(this.inputs, this.outputs, true);
-
-        for (var i = 0; i < this.nodes.size(); i++) { //copy this.nodes
-            clone.nodes.add(this.nodes.get(i).clone());
+    void enableMutate() {
+        //generateNetwork();                // remove laters
+        if (connectionGeneList.size() > 0) {
+            ConnectionGene randomCon = connectionGeneList.get(rand.nextInt(connectionGeneList.size()));
+            randomCon.setEnabled(true);
         }
-
-        //copy all the connections so that they connect the clone new this.nodes
-
-        for (var i = 0; i < this.genes.size(); i++) { //copy genes
-            clone.genes.add(this.genes.get(i).clone(clone.getNode(this.genes.get(i).getFromNode().getNumber()), clone.getNode(this.genes.get(i).getToNode().getNumber())));
-        }
-
-        clone.layers = this.layers;
-        clone.nextNode = this.nextNode;
-        clone.biasNode = this.biasNode;
-        clone.connectNodes();
-
-        return clone;
     }
+
+    @Override
+    public int compareTo(Object o) {
+        Genome g = (Genome)o;
+        if (fitness==g.fitness)
+            return 0;
+        else if(fitness >g.fitness)
+            return 1;
+        else
+            return -1;
+    }
+
+    @Override
+    public String toString() {
+        return "Genome{" +
+                "fitness=" + fitness +
+                ", connectionGeneList=" + connectionGeneList +
+                ", nodeGenes=" + nodes +
+                '}';
+    }
+
+    public void setAdjustedFitness(float adjustedFitness) {
+        this.adjustedFitness = adjustedFitness;
+    }
+
+    public float getAdjustedFitness() {
+        return adjustedFitness;
+    }
+
+    public float getPoints() {
+        return points;
+    }
+
+    public void setPoints(float points) {
+        this.points = points;
+    }
+
+    public void writeTofile(){
+        BufferedWriter bw = null;
+        FileWriter fw = null;
+        StringBuilder builder = new StringBuilder();
+        for (ConnectionGene conn: connectionGeneList) {
+            builder.append(conn.toString()+"\n");
+        }
+        try {
+
+
+            fw = new FileWriter("Genome.txt");
+            bw = new BufferedWriter(fw);
+            bw.write(builder.toString());
+
+            System.out.println("Done");
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
+        } finally {
+
+            try {
+
+                if (bw != null)
+                    bw.close();
+
+                if (fw != null)
+                    fw.close();
+
+            } catch (IOException ex) {
+
+                ex.printStackTrace();
+
+            }
+
+        }
+
+    }
+
 }

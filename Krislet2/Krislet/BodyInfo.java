@@ -1,3 +1,5 @@
+package Krislet;
+
 public class BodyInfo {
     public double speed = 0, stamina = 8000, effort = 1;
     public int frame = 0, kickCount = 0, dashCount = 0, turnCount = 0, sayCount = 0;

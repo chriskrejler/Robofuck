@@ -1,96 +1,73 @@
 package NEAT;
 
-import java.util.Random;
-
+/**
+ * ConnectionGene Represents the connection(Axon) of the neuron
+ * ConnectionGenes can completely represent the neuron as Nodes are generated while performing operation
+ * Created by vishnughosh on 28/02/17.
+ */
 public class ConnectionGene {
-    private Node fromNode;
-    private Node toNode;
-    private double weight;
-    private boolean enabled = true;
-    private double innovationNo;
-    private Random rand = new Random();
 
-    public ConnectionGene(Node fromNode, Node toNode, double weight, double innovationNo) {
-        this.fromNode = fromNode;
-        this.toNode = toNode;
+    private int into,out, innovation;
+    private float weight;
+    private boolean enabled;
+
+    public ConnectionGene(int into, int out, int innovation, float weight, boolean enabled) {
+        this.into = into;
+        this.out = out;
+        this.innovation = innovation;
         this.weight = weight;
-        this.innovationNo = innovationNo;
-    }
-
-    public void mutateWeight () {
-        double random = randomDouble(0,0); // 0-1
-        if (random < 0.1) {
-            this.weight = randomDouble(-1,0);
-        } else {
-            // TODO: Implement gaussian method?
-        }
-
-        // Keep weights between bounds
-        if (this.weight > 1) {
-            this.weight = 1;
-        }
-
-        if (this.weight < -1) {
-            this.weight = -1;
-        }
-    }
-
-    public ConnectionGene clone(Node from, Node to){
-        return new ConnectionGene(from, to, this.weight, this.innovationNo);
-    }
-
-    public double randomDouble(int min, int max) {
-        return Math.random() * (max - min + 1) + min;
-    }
-
-
-    // GETTERS AND SETTERS
-
-    public void setFromNode(Node fromNode) {
-        this.fromNode = fromNode;
-    }
-
-    public void setToNode(Node toNode) {
-        this.toNode = toNode;
-    }
-
-    public void setWeight(double weight) {
-        this.weight = weight;
-    }
-
-    public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
-    public void setInnovationNo(double innovationNo) {
-        this.innovationNo = innovationNo;
+    // Copy
+    public ConnectionGene(ConnectionGene connectionGene){
+        if(connectionGene!=null) {
+            this.into = connectionGene.getInto();
+            this.out = connectionGene.getOut();
+            this.innovation = connectionGene.getInnovation();
+            this.weight = connectionGene.getWeight();
+            this.enabled = connectionGene.isEnabled();
+        }
     }
 
-    public void setRand(Random rand) {
-        this.rand = rand;
+    public int getInto() {
+        return into;
     }
 
-    public Node getFromNode() {
-        return fromNode;
+    public int getOut() {
+        return out;
     }
 
-    public Node getToNode() {
-        return toNode;
+    public int getInnovation() {
+        return innovation;
     }
 
-    public double getWeight() {
+    public float getWeight() {
         return weight;
+    }
+
+    public void setWeight(float weight) {
+        this.weight = weight;
     }
 
     public boolean isEnabled() {
         return enabled;
     }
 
-    public double getInnovationNo() {
-        return innovationNo;
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
-    public Random getRand() {
-        return rand;
+
+    @Override
+    public String toString() {
+/*        return "ConnectionGene{" +
+                "into=" + into +
+                ", out=" + out +
+                ", innovation=" + innovation +
+                ", weight=" + weight +
+                ", enabled=" + enabled +
+                '}';*/
+        return into+","+out+","+weight+","+enabled;
     }
 }

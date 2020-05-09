@@ -1,3 +1,5 @@
+package Krislet;
+
 public class States {
     enum playerState{
         THINKING,

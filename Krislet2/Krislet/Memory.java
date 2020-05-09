@@ -1,4 +1,4 @@
-//
+package Krislet;//
 //	File:			Memory.java
 //	Author:		Krzysztof Langner
 //	Date:			1997/04/28
@@ -36,6 +36,24 @@ class Memory
 		}
 
 		return null;
+	}
+
+	public Pair<PlayerInfo, PlayerInfo> getPlayers(){
+		PlayerInfo teammate = null;
+		PlayerInfo enemy = null;
+
+		for (java.lang.Object o: m_info.m_objects)
+		{
+			if( ((ObjectInfo)o).m_type.equals("player")){
+				if(((ObjectInfo) o).m_teamName == "hash"){
+					teammate = (PlayerInfo) o;
+				}else{
+					enemy = (PlayerInfo) o;
+				}
+			}
+
+		}
+		return new Pair(teammate, enemy);
 	}
 
 	//---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-//
+package Krislet;//
 //	File:			Krislet.java
 //	Author:		Krzysztof Langner
 //	Date:			1997/04/28
@@ -15,7 +15,7 @@ import java.util.StringTokenizer;
 //	This is main object class
 //
 //***************************************************************************
-class Krislet implements SendCommand
+public class Krislet implements SendCommand
 {
 //===========================================================================
 // Initialization member functions

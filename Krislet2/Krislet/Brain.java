@@ -1,4 +1,4 @@
-//
+package Krislet;//
 //	File:			Brain.java
 //	Author:		Krzysztof Langner
 //	Date:			1997/04/28
@@ -8,7 +8,7 @@
 import java.lang.Math;
 import java.util.StringTokenizer;
 
-class Brain extends Thread implements SensorInput {
+public class Brain extends Thread implements SensorInput {
 	States.gameState gameState = States.gameState.BEFORE_KICKOFF;
 	BodyInfo bodyInfo = new BodyInfo();
     //---------------------------------------------------------------------------
@@ -47,89 +47,22 @@ class Brain extends Thread implements SensorInput {
     //	To ensure that we don'first send commands to often after each cycle
     //	we waits one simulator steps. (This of course should be done better)
     public void run() {
-        int[] turnRates = {0, -30, -60, -90, 30, 60, 90};
-        PlayerInfo lastSeenTeammate = null;
-        int lastSeenTeammate_head_deg = 0;
-        double teammate_dist_ball = 0;
+        updatePlayers();
 
-        // first put it somewhere on my side
-        //m_krislet.move(-Math.random() * 52.5, Math.random() * 34.0);
-        //m_krislet.move(-Math.random() * 10, Math.random() * 15);
 
-        m_krislet.turn(-40);
-        m_memory.waitForNewInfo();
-        //m_krislet.move(-6.35, -25.79);
-        m_krislet.move(-19, 11);
 
-        while (!m_timeOver) {
-            PlayerInfo teammate = (PlayerInfo) m_memory.getObject("player");
-            BallInfo ball = (BallInfo) m_memory.getObject("ball");
 
-            // Look for ball and turn toward it. Default behaviour.
-            while (ball == null) {
-                m_krislet.turn(40);
-                m_memory.waitForNewInfo();
-                ball = (BallInfo) m_memory.getObject("ball");
-                if (ball != null) {
-                    m_krislet.turn(ball.m_direction);
-                    m_memory.waitForNewInfo();
-                }
-            }
-
-            // After ball has been found, we look for any players in our radius by turning our head.
-            // If no players are found within our radius it must mean we are the closest one to the ball and/or the only player on the field.
-            if (lastSeenTeammate == null) {
-                Pair<PlayerInfo, Integer> lastSeen = lookForAPlayer();
-                lastSeenTeammate = lastSeen.getFirst();
-                lastSeenTeammate_head_deg = lastSeen.getSecond();
-
-                if (lastSeenTeammate == null) {
-                    // A teammate was not found
-                    System.out.println("A player was not found!");
-                }
-            } else {
-                // A teammate was found
-                // Determine if we are closer than our teammate to the ball
-                double teammate_distance_to_ball = calculateTeammateDistanceToBall(lastSeenTeammate, lastSeenTeammate_head_deg, ball);
-                double my_distance_to_ball = ball.m_distance;
-
-                /* Print statements to check distance and determining if closer to ball than teammate */
-                System.out.println("Teammate distance: " + teammate_distance_to_ball);
-                System.out.println("My distance: " + my_distance_to_ball);
-                System.out.println(isClosestToBall(my_distance_to_ball, teammate_distance_to_ball));
-                System.out.println("\n");
-
-                if (isClosestToBall(my_distance_to_ball, teammate_distance_to_ball)) {
-                    // Dash to ball if we are the closest one
-                    m_krislet.dash(10 * ball.m_distance);
-
-                    if (ball.m_distance < 1.0) {
-                        // We need to know where to pass the ball, so we look for our teammate
-                        System.out.println("Close to ball , looking for player");
-                        Pair<PlayerInfo, Integer> lastSeen = lookForAPlayer();
-                        if (lastSeen.getFirst() != null && lastSeen.getSecond() != null) {
-                            lastSeenTeammate = lastSeen.getFirst();
-                            lastSeenTeammate_head_deg = lastSeen.getSecond();
-                        }
-
-                        m_krislet.kick(calculatePower(lastSeenTeammate.m_distance, ball), lastSeenTeammate.m_direction + lastSeenTeammate_head_deg);
-                    }
-
-                }
-            }
-			// sleep one step to ensure that we will not send
-			// two commands in one cycle.
-			try {
-				Thread.sleep(SoccerParams.simulator_step);
-			} catch (
-					Exception e) {
-			}
-        }
     }
 
 
     //===========================================================================
 // Here are suporting functions for implement logic
+
+    public void updatePlayers(){
+        Pair<PlayerInfo, PlayerInfo> players = m_memory.getPlayers();
+        teammate = new Pair(players.first.m_direction, players.first.m_distance);
+        enemy = new Pair(players.second.m_direction, players.second.m_distance);
+    }
 
 	public void setGameState(States.gameState gs){
 		gameState = gs;
@@ -200,7 +133,7 @@ class Brain extends Thread implements SensorInput {
         }
         m_krislet.turn_neck(-90);
         m_memory.waitForNewInfo();
-        return new Pair<>(null, 0);
+        return new Pair<>((PlayerInfo)null, 0);
     }
 
     private double calculatePower(float teammate_distance, BallInfo ball) {
@@ -306,8 +239,10 @@ class Brain extends Thread implements SensorInput {
     //===========================================================================
 // Private members
     private SendCommand m_krislet;            // robot which is controled by this brain
-    private Memory m_memory;                // place where all information is stored
+    public Memory m_memory;                // place where all information is stored
     private char m_side;
     volatile private boolean m_timeOver;
+    public Pair<Double, Double> teammate;
+    public Pair<Double, Double> enemy;
 }
 
