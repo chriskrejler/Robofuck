@@ -30,17 +30,23 @@ public class Brain extends Thread implements SensorInput {
 
 
 
-    public int run(Genome gene) {
+    public float run(Genome gene) {
     	boolean running = true;
-    	int shots = 0;
+    	double shots = 0;
 		Pair<PlayerInfo, PlayerInfo> teammateEnemy;
 		float[] inputs = new float[4];
 		float[] outputs;
 
 
 		while(running) {
+			m_krislet.parseSensorInformation(m_krislet.receive());
 			if (gameState == States.gameState.PLAY_ON) {
-				teammateEnemy = m_memory.getPlayers();
+
+				do {
+					m_krislet.parseSensorInformation(m_krislet.receive());
+					teammateEnemy = m_memory.getPlayers();
+				}while(teammateEnemy.first == null || teammateEnemy.second == null);
+
 				inputs[0] = teammateEnemy.first.m_direction;
 				inputs[1] = teammateEnemy.first.m_distance;
 				inputs[2] = teammateEnemy.second.m_direction;
@@ -52,19 +58,20 @@ public class Brain extends Thread implements SensorInput {
 				m_krislet.kick(outputs[0], outputs[1]);
 
 				while (true) {
-					if (gameState == States.gameState.GOAL_R) {
-						shots++;
+					m_krislet.parseSensorInformation(m_krislet.receive());
+					if (gameState == States.gameState.KICK_IN_R && !m_memory.getUsed()) {
+						shots += m_memory.getScore();
 						break;
-					} else if (gameState == States.gameState.GOAL_L) {
+					} else if (gameState == States.gameState.KICK_IN_L && !m_memory.getUsed()) {
+						shots += m_memory.getScore();
 						running = false;
 						break;
 					}
 				}
 				System.out.println(shots);
 			}
-			m_krislet.parseSensorInformation(m_krislet.receive());
 		}
-		return shots;
+		return (float)shots;
     }
 
 
@@ -95,8 +102,6 @@ public class Brain extends Thread implements SensorInput {
 		bodyInfo.setTurnCount(Integer.parseInt(tokenizer.nextToken()));
 		tokenizer.nextToken();
 		bodyInfo.setSayCount(Integer.parseInt(tokenizer.nextToken()));
-
-		System.out.println(bodyInfo.toString());
 
 	}
 
@@ -157,6 +162,12 @@ public class Brain extends Thread implements SensorInput {
     public void see(VisualInfo info) {
         m_memory.store(info);
     }
+
+    public void save(double score, boolean used){
+    	m_memory.setScore(score);
+    	m_memory.setUsed(used);
+		System.out.println("Score: " + score + " Used: " + used);
+	}
 
 
     //---------------------------------------------------------------------------

@@ -52,4 +52,6 @@ interface SensorInput
 	public void hear(int time, String message);
 
 	public void senseBody(String message);
+
+	public void save(double score, boolean used);
 }

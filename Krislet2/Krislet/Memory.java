@@ -21,6 +21,17 @@ class Memory
 		m_info = info;
 	}
 
+	public double getScore(){return m_info.score;}
+
+	public void setScore(double score){
+		m_info.score = score;
+	}
+
+	public void setUsed(boolean used){m_info.used = used;}
+
+
+	public boolean getUsed(){return m_info.used;}
+
 	//---------------------------------------------------------------------------
 	// This function looks for specified object
 	public ObjectInfo getObject(String name) 
@@ -39,14 +50,11 @@ class Memory
 	}
 
 	public Pair<PlayerInfo, PlayerInfo> getPlayers(){
-		boolean notNull = false;
 		PlayerInfo teammate = null;
 		PlayerInfo enemy = null;
-
-		while(!notNull) {
 			for (java.lang.Object o : m_info.m_objects) {
 				if (((ObjectInfo) o).m_type.equals("player")) {
-					if (((ObjectInfo) o).m_teamName.equals("NEAT")) {
+					if (((PlayerInfo) o).m_teamName.equals("NEAT")) {
 						teammate = (PlayerInfo) o;
 					} else {
 						enemy = (PlayerInfo) o;
@@ -54,9 +62,7 @@ class Memory
 				}
 			}
 			if((teammate != null) && (enemy != null)){
-				notNull = true;
 			}
-		}
 		return new Pair(teammate, enemy);
 	}
 

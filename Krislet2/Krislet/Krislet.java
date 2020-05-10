@@ -249,7 +249,6 @@ public class Krislet implements SendCommand
 	{
 		// get hear information
 		StringTokenizer	tokenizer = new StringTokenizer(message,"() ");
-		System.out.println(message);
 		int	time;
 		String sender;
 
@@ -259,6 +258,10 @@ public class Krislet implements SendCommand
 		sender = tokenizer.nextToken();
 		if( sender.compareTo("referee") == 0 )
 			m_brain.hear(time, tokenizer.nextToken());
+		else if(sender.compareTo("Score") == 0){
+			tokenizer.nextToken();
+			m_brain.save(Double.parseDouble(tokenizer.nextToken()), false);
+		}
 		else if( sender.compareTo("self") != 0 )
 			m_brain.hear(time, Integer.parseInt(sender), tokenizer.nextToken());
 	}

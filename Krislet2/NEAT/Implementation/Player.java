@@ -36,7 +36,7 @@ public class Player implements Environment {
             topGenome = pool.getTopGenome();
             //System.out.println("TopFitness : " + topGenome.getPoints());
 
-            if(topGenome.getPoints()>15){
+            if(topGenome.getPoints()>95){
                 break;
             }
 //            System.out.println("Population : " + pool.getCurrentPopulation() );

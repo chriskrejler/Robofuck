@@ -21,6 +21,8 @@ class VisualInfo
 	public Vector m_objects;
 	public StringTokenizer m_tokenizer;
 	public String m_message;
+	public boolean used = false;
+	public double score = 0;
 
       // Split objects into specific lists
       private Vector m_ball_list;
