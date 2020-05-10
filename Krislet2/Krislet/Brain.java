@@ -26,7 +26,6 @@ public class Brain extends Thread implements SensorInput {
         m_side = side;
 //		m_number = number;
 //		m_playMode = playMode;
-		player = new Player(this);
     }
 
 
@@ -63,6 +62,7 @@ public class Brain extends Thread implements SensorInput {
 				}
 				System.out.println(shots);
 			}
+			m_krislet.parseSensorInformation(m_krislet.receive());
 		}
 		return shots;
     }

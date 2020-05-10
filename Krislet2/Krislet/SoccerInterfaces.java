@@ -29,6 +29,9 @@ interface SendCommand
 	void say(String message);
 	// This function sends chage_view command to the server
 	void changeView(String angle, String quality);
+
+	void parseSensorInformation(String message);
+	String receive();
 }
 
 

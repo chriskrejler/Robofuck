@@ -5,6 +5,8 @@ package Krislet;//
 //
 
 
+import NEAT.Implementation.Player;
+
 import java.io.*;
 import java.net.*;
 import java.util.StringTokenizer;
@@ -126,12 +128,15 @@ public class Krislet implements SendCommand
 		// first we need to initialize connection with server
 		init();
 
+		System.out.println("Hello");
 		m_socket.receive(packet);
+		System.out.println("Fuckface");
 		parseInitCommand(new String(buffer,0));
 		m_port = packet.getPort();
 
 		// Now we should be connected to the server
 		// and we know side, player number and play mode
+		new Player((Brain)m_brain);
 		while( true )
 			parseSensorInformation(receive());
 	}
@@ -220,7 +225,7 @@ public class Krislet implements SendCommand
 
 	//---------------------------------------------------------------------------
 	// This function parses sensor information
-	private void parseSensorInformation(String message)
+	public void parseSensorInformation(String message)
 	{
 
 		// First check kind of information		
@@ -277,7 +282,7 @@ public class Krislet implements SendCommand
 
 	//---------------------------------------------------------------------------
 	// This function waits for new message from server
-	private String receive() 
+	public String receive()
 	{
 		byte[] buffer = new byte[MSG_SIZE];
 		DatagramPacket packet = new DatagramPacket(buffer, MSG_SIZE);
