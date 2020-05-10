@@ -85,6 +85,19 @@ class Memory
 		return m_info.m_time;
 	}
 
+    public PlayerInfo getPlayer(String teamname, int teamnumber){
+        PlayerInfo player = null;
+        for (java.lang.Object o : m_info.m_objects) {
+            if (((ObjectInfo) o).m_type.equals("player")) {
+                if (((PlayerInfo) o).m_teamName.equals(teamname)) {
+                    if(((PlayerInfo) o).getTeamNumber() == teamnumber) {
+                        player = (PlayerInfo) o;
+                    }
+                }
+            }
+        }
+        return player;
+    }
 
 //===========================================================================
 // Private members

@@ -154,18 +154,22 @@ class Krislet implements SendCommand
 		send("(move (" + object + ") " + x + " " + y + ")");
 	}
 
-	public void sendGameScore(int successfulPasses){
-		send("(say passes " + successfulPasses + ")");
-	}
-
 	public void signalEndOfGame(int type){
 		if(type == 1){
-			send("(change_mode before_kick_off)");
+			send("(change_mode play_on)");
 		}else {
 			send("(change_mode play_on)");
 		}
 	}
 
+	public void sendGameScore(double score){
+	    if(score <= 0){
+	        send("say Score " + 0);
+        }
+        else {
+            send("say Score " + score);
+        }
+    }
 	//---------------------------------------------------------------------------
 	// This function parses initial message from the server
 	protected void parseInitCommand(String message)	throws IOException

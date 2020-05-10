@@ -53,9 +53,9 @@ class Brain extends Thread implements SensorInput
 		}
 
 		passSituation(players);
+        m_krislet.send("(change_mode kick_off_l)");
 
         while (true) {
-        	//m_krislet.send("hear referee 0 play_on");
         	//Collect amount of distance ball traveled
 			ObjectInfo ball = m_memory.getObject("ball");
 			players = (ArrayList<PlayerInfo>) m_memory.getPlayerList();
@@ -68,7 +68,7 @@ class Brain extends Thread implements SensorInput
 
 			//Check if a pass has been made, determine if its successful, and reset
             checkForPass(ball, players);
-			System.out.println(gameState);
+			//System.out.println(gameState);
         }
     }
 
@@ -107,15 +107,27 @@ class Brain extends Thread implements SensorInput
 				}
 			}
 			m_krislet.moveObject("player " + team1 + " 1", 0, 0);
-			m_krislet.moveObject("player " + team1 + " 2", getRandomInRange(30, 20), getRandomInRange(0, 10));
-			m_krislet.moveObject("player " + team2 + " 1", getRandomInRange(30, 20), getRandomInRange(0, 10));
+			m_krislet.moveObject("player " + team1 + " 2", getRandomInRange(20, 10), getRandomInRange(0, 10));
+			m_krislet.moveObject("player " + team2 + " 1", getRandomInRange(20, 10), getRandomInRange(0, 10));
 			m_krislet.moveObject("ball", 0, 0);
 		}
+		endTick = m_memory.getTime() + 3;
 	}
 
     public void checkForPass(ObjectInfo ball, ArrayList<PlayerInfo> players){
 		//check if a pass was successful or not
-		if(ball.m_deltaX < Math.abs(0.1) &&  ball.m_deltaY < Math.abs(0.1) && ball.m_X != 0 && ball.m_Y != 0){
+		PlayerInfo playerToBePassed = m_memory.getPlayer(team1, 2);
+
+		double startDistance = distanceToBall(playerToBePassed, (BallInfo) ball);
+		if((ball.m_deltaX < Math.abs(0.1) &&
+				ball.m_deltaY < Math.abs(0.1) &&
+				Math.abs(ball.m_X) > 0.1 &&
+				Math.abs(ball.m_Y) > 0.1) ||
+				(m_memory.getTime() >= endTick &&
+						ball.m_deltaX < Math.abs(0.1) &&
+						ball.m_deltaY < Math.abs(0.1))){
+			double endDistance = distanceToBall(playerToBePassed, (BallInfo) ball);
+			m_krislet.sendGameScore((endDistance/startDistance)*100);
 			boolean pass = false;
 			for(PlayerInfo player : players){
 				if(player.getTeamNumber() != 1 && player.getTeamName().equals(team1)){
@@ -126,22 +138,28 @@ class Brain extends Thread implements SensorInput
 				}
 			}
 			if (pass){
+                m_krislet.send("(change_mode kick_in_r)");
+				System.out.println("goal r");
 				succesfulPasses += 1;
-				threeManNoVision();
+				try{
+					currentThread().sleep(100);
+				}catch(Exception e){
+					System.out.println("cry");
+				}
+				passSituation(players);
 			}
 			else {
-				//Send the amount of successful passes, and set game state to before_kick_off
-				m_krislet.sendGameScore(succesfulPasses);
-				m_krislet.signalEndOfGame(1);
+                m_krislet.send("(change_mode kick_in_l)");
 				//Wait for NEAT algorithm to mutate
 				try{
 					currentThread().sleep(100);
 				}catch(Exception e){
 					System.out.println("cry");
 				}
-				//Reset ball and players, and set game state to play_on
+                //Send the amount of successful passes, and set game state to before_kick_off
+                m_krislet.signalEndOfGame(1);
+				//Reset ball and players
 				passSituation(players);
-				m_krislet.signalEndOfGame(0);
 			}
 		}
 	}
@@ -300,6 +318,10 @@ class Brain extends Thread implements SensorInput
 
 	}
 
+	public double distanceToBall(PlayerInfo player, BallInfo ball){
+		return Math.sqrt(Math.pow(ball.m_Y - player.m_Y,2)+Math.pow(ball.m_X - player.m_X, 2));
+	}
+
 
     //===========================================================================
 // Private members
@@ -313,6 +335,7 @@ class Brain extends Thread implements SensorInput
 	private double ballY = 0;
 	private String team1 = "temp1";
 	private String team2 = "temp2";
+	private int endTick = 0;
 	private int succesfulPasses = 0;
 
 }
