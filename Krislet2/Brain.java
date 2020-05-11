@@ -126,8 +126,14 @@ class Brain extends Thread implements SensorInput
 				(m_memory.getTime() >= endTick &&
 						ball.m_deltaX < Math.abs(0.1) &&
 						ball.m_deltaY < Math.abs(0.1))){
+			ball = m_memory.getObject("ball");
 			double endDistance = distanceToBall(playerToBePassed, (BallInfo) ball);
-			m_krislet.sendGameScore((endDistance/startDistance)*100);
+			m_krislet.sendGameScore(100-((endDistance/startDistance)*100));
+			try{
+				currentThread().sleep(100);
+			}catch(Exception e){
+				System.out.println("cry");
+			}
 			boolean pass = false;
 			for(PlayerInfo player : players){
 				if(player.getTeamNumber() != 1 && player.getTeamName().equals(team1)){

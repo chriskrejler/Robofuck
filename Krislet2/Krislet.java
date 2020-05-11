@@ -164,10 +164,12 @@ class Krislet implements SendCommand
 
 	public void sendGameScore(double score){
 	    if(score <= 0){
-	        send("say Score " + 0);
+			System.out.println("Sending say score");
+	        send("(say score " + 0 + ")");
         }
         else {
-            send("say Score " + score);
+			System.out.println("Sending say score2: " + score);
+            send("(say score " + score + ")");
         }
     }
 	//---------------------------------------------------------------------------
