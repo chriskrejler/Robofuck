@@ -68,6 +68,8 @@ public class Brain extends Thread implements SensorInput {
 						m_memory.setUsed(true);
 						running = false;
 						break;
+					} else if (gameState == States.gameState.BEFORE_KICKOFF) {
+						m_krislet.kick(outputs[0], outputs[1]);
 					}
 				}
 				System.out.println(shots);
