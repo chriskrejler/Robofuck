@@ -132,8 +132,9 @@ class Krislet implements SendCommand
 
 		// Now we should be connected to the server
 		// and we know side, player number and play mode
+		send("(eye on)");
 		while( true ){
-			send("(look)");
+			//send("(look)");
 			parseSensorInformation(receive());
 		}
 	}
@@ -223,9 +224,16 @@ class Krislet implements SendCommand
 
 		 */
 		//check for 'ok listen'
-		if(message.charAt(1) == 'o' && message.charAt(2) == 'k' && message.charAt(4) == 'l'){
+		/*if(message.charAt(1) == 'o' && message.charAt(2) == 'k' && message.charAt(4) == 'l'){
 			VisualInfo info = new VisualInfo(message);
 			System.out.println(message);
+			info.parse();
+			m_brain.see(info);
+		}*/
+		//System.out.println(message);
+		if(message.charAt(1) == 's' && message.charAt(2) == 'e'){
+			VisualInfo info = new VisualInfo(message);
+			//System.out.println(message);
 			info.parse();
 			m_brain.see(info);
 		}

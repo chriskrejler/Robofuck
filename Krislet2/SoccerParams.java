@@ -6,6 +6,6 @@
 
 class SoccerParams 
 {
-	final static int	simulator_step = 100;
+	final static int	simulator_step = 2;
 }
 

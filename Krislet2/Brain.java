@@ -112,6 +112,7 @@ class Brain extends Thread implements SensorInput {
         PlayerInfo playerToBePassed = m_memory.getPlayer(team1, 2);
         BallInfo ball = (BallInfo) m_memory.getObject("ball");
         startDistance = distanceToBall(playerToBePassed, ball);
+        hasKicked = false;
         try {
             currentThread().sleep(100);
         } catch (Exception e) {
@@ -152,12 +153,12 @@ class Brain extends Thread implements SensorInput {
 
         ball = m_memory.getObject("ball");
 
-        if ((Math.abs(ball.m_deltaX) <= 0.001 &&
-                Math.abs(ball.m_deltaY) <= 0.001 &&
+        if ((Math.abs(ball.m_deltaX) <= 0.01 &&
+                Math.abs(ball.m_deltaY) <= 0.01 &&
                 Math.abs(ball.m_X) > 0.1 &&
                 Math.abs(ball.m_Y) > 0.1) ||
-                (Math.abs(ball.m_deltaX) <= 0.001 &&
-                        Math.abs(ball.m_deltaY) <= 0.001)) {
+                (Math.abs(ball.m_deltaX) <= 0.01 &&
+                        Math.abs(ball.m_deltaY) <= 0.01)) {
             BallInfo currentBall = (BallInfo) m_memory.getObject("ball");
             double endDistance = distanceToBall(playerToBePassed, currentBall);
             m_krislet.sendGameScore(100 - ((endDistance / startDistance) * 100));
@@ -276,7 +277,7 @@ class Brain extends Thread implements SensorInput {
     //---------------------------------------------------------------------------
     // This function receives hear information from referee
     public void hear(int time, String message) {
-        System.out.println(message);
+        //System.out.println(message);
 
         StringTokenizer tokenizer = new StringTokenizer(message, "() ", true);
         String token;
