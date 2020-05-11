@@ -14,9 +14,12 @@ import java.util.ArrayList;
 public class Player implements Environment {
     @Override
     public void evaluateFitness(ArrayList<Genome> population) {
+        int child = 1;
 
         for (Genome gene: population) {
+            System.out.println("Generation : " + generationPublic + " Child: " + child);
             gene.setFitness(brain.run(gene));
+            child++;
         }
     }
 
@@ -36,7 +39,9 @@ public class Player implements Environment {
             topGenome = pool.getTopGenome();
             //System.out.println("TopFitness : " + topGenome.getPoints());
 
-            if(topGenome.getPoints()>95){
+            float points = topGenome.getPoints();
+            System.out.println("Points: " + points);
+            if(points>1500){
                 break;
             }
 //            System.out.println("Population : " + pool.getCurrentPopulation() );
@@ -44,9 +49,11 @@ public class Player implements Environment {
 
             pool.breedNewGeneration();
             generation++;
+            generationPublic = generation;
         }
         //System.out.println(topGenome.evaluateNetwork(new float[]{1,0})[0]);
     }
 
+    int generationPublic;
     private Brain brain;
 }

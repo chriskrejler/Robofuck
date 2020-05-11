@@ -198,9 +198,9 @@ class VisualInfo
 			while( m_tokenizer.hasMoreTokens() )
       		{
         			token = m_tokenizer.nextToken();
-        			System.out.print(token);//m_tokenizer.nextToken());
+        			//System.out.print(token);//m_tokenizer.nextToken());
       		}
-                  System.out.println(m_message);
+                  //System.out.println(m_message);
 			System.out.println("");
 		}
 	}

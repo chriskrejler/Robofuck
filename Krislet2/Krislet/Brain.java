@@ -12,8 +12,9 @@ import java.lang.Math;
 import java.util.StringTokenizer;
 
 public class Brain extends Thread implements SensorInput {
-	States.gameState gameState = States.gameState.BEFORE_KICKOFF;
-	BodyInfo bodyInfo = new BodyInfo();
+    States.gameState gameState = States.gameState.BEFORE_KICKOFF;
+    BodyInfo bodyInfo = new BodyInfo();
+
     //---------------------------------------------------------------------------
     // This constructor:
     // - stores connection to krislet
@@ -29,53 +30,58 @@ public class Brain extends Thread implements SensorInput {
     }
 
 
-
     public float run(Genome gene) {
-    	boolean running = true;
-    	double shots = 0;
-		Pair<PlayerInfo, PlayerInfo> teammateEnemy;
-		float[] inputs = new float[4];
-		float[] outputs;
+        boolean running = true;
+        double shots = 0;
+        Pair<PlayerInfo, PlayerInfo> teammateEnemy;
+        float[] inputs = new float[4];
+        float[] outputs;
 
 
-		while(running) {
-			m_krislet.parseSensorInformation(m_krislet.receive());
-			if (gameState == States.gameState.PLAY_ON) {
+        while (running) {
+            m_krislet.parseSensorInformation(m_krislet.receive());
+            if (gameState == States.gameState.PLAY_ON) {
 
-				do {
-					m_krislet.parseSensorInformation(m_krislet.receive());
-					teammateEnemy = m_memory.getPlayers();
-				}while(teammateEnemy.first == null || teammateEnemy.second == null);
+                do {
+                    m_krislet.parseSensorInformation(m_krislet.receive());
+                    teammateEnemy = m_memory.getPlayers();
+                } while (teammateEnemy.first == null || teammateEnemy.second == null);
 
-				inputs[0] = teammateEnemy.first.m_direction;
-				inputs[1] = teammateEnemy.first.m_distance;
-				inputs[2] = teammateEnemy.second.m_direction;
-				inputs[3] = teammateEnemy.second.m_distance;
+                inputs[0] = teammateEnemy.first.m_direction;
+                inputs[1] = teammateEnemy.first.m_distance;
+                inputs[2] = teammateEnemy.second.m_direction;
+                inputs[3] = teammateEnemy.second.m_distance;
 
-				outputs = gene.evaluateNetwork(inputs);
-				System.out.println("Angle: " + outputs[0] + " Power: " + outputs[1]);
+                outputs = gene.evaluateNetwork(inputs);
+                System.out.println("Angle: " + outputs[0] + " Power: " + outputs[1]);
 
-				m_krislet.kick(outputs[0], outputs[1]);
+                float angle = 0;
+                if (outputs[1] <= 0.5f) {
+                    angle = -(90 - (angle * 90));
+                } else {
+                    angle = (outputs[1] - 0.5f) * 180;
+                }
+                m_krislet.kick(outputs[0] * 100, angle);
 
-				while (true) {
-					m_krislet.parseSensorInformation(m_krislet.receive());
-					if (gameState == States.gameState.KICK_IN_R && !m_memory.getUsed()) {
-						shots += m_memory.getScore();
-						m_memory.setUsed(true);
-						break;
-					} else if (gameState == States.gameState.KICK_IN_L && !m_memory.getUsed()) {
-						shots += m_memory.getScore();
-						m_memory.setUsed(true);
-						running = false;
-						break;
-					} else if (gameState == States.gameState.BEFORE_KICKOFF) {
-						m_krislet.kick(outputs[0], outputs[1]);
-					}
-				}
-				System.out.println(shots);
-			}
-		}
-		return (float)shots;
+                while (true) {
+                    m_krislet.parseSensorInformation(m_krislet.receive());
+                    if (gameState == States.gameState.KICK_IN_R && !m_memory.getUsed()) {
+                        shots += m_memory.getScore();
+                        m_memory.setUsed(true);
+                        break;
+                    } else if (gameState == States.gameState.KICK_IN_L && !m_memory.getUsed()) {
+                        shots += m_memory.getScore();
+                        m_memory.setUsed(true);
+                        running = false;
+                        break;
+                    } else if (gameState == States.gameState.BEFORE_KICKOFF) {
+                        m_krislet.kick(outputs[0] * 100, angle);
+                    }
+                }
+                System.out.println(shots);
+            }
+        }
+        return (float) shots;
     }
 
 
@@ -83,31 +89,31 @@ public class Brain extends Thread implements SensorInput {
 // Here are suporting functions for implement logic
 
 
-	public void setGameState(States.gameState gs){
-		gameState = gs;
-	}
+    public void setGameState(States.gameState gs) {
+        gameState = gs;
+    }
 
-	public void senseBody(String message){
-		StringTokenizer	tokenizer = new StringTokenizer(message,"() ");
-		tokenizer.nextToken();
-		bodyInfo.setFrame(Integer.parseInt(tokenizer.nextToken()));
-		tokenizer.nextToken();
-		bodyInfo.setViewMode(tokenizer.nextToken() + " " + tokenizer.nextToken());
-		tokenizer.nextToken();
-		bodyInfo.setStamina(Double.parseDouble(tokenizer.nextToken()));
-		bodyInfo.setEffort(Double.parseDouble(tokenizer.nextToken()));
-		tokenizer.nextToken();
-		bodyInfo.setSpeed(Double.parseDouble(tokenizer.nextToken()));
-		tokenizer.nextToken();
-		bodyInfo.setKickCount(Integer.parseInt(tokenizer.nextToken()));
-		tokenizer.nextToken();
-		bodyInfo.setDashCount(Integer.parseInt(tokenizer.nextToken()));
-		tokenizer.nextToken();
-		bodyInfo.setTurnCount(Integer.parseInt(tokenizer.nextToken()));
-		tokenizer.nextToken();
-		bodyInfo.setSayCount(Integer.parseInt(tokenizer.nextToken()));
+    public void senseBody(String message) {
+        StringTokenizer tokenizer = new StringTokenizer(message, "() ");
+        tokenizer.nextToken();
+        bodyInfo.setFrame(Integer.parseInt(tokenizer.nextToken()));
+        tokenizer.nextToken();
+        bodyInfo.setViewMode(tokenizer.nextToken() + " " + tokenizer.nextToken());
+        tokenizer.nextToken();
+        bodyInfo.setStamina(Double.parseDouble(tokenizer.nextToken()));
+        bodyInfo.setEffort(Double.parseDouble(tokenizer.nextToken()));
+        tokenizer.nextToken();
+        bodyInfo.setSpeed(Double.parseDouble(tokenizer.nextToken()));
+        tokenizer.nextToken();
+        bodyInfo.setKickCount(Integer.parseInt(tokenizer.nextToken()));
+        tokenizer.nextToken();
+        bodyInfo.setDashCount(Integer.parseInt(tokenizer.nextToken()));
+        tokenizer.nextToken();
+        bodyInfo.setTurnCount(Integer.parseInt(tokenizer.nextToken()));
+        tokenizer.nextToken();
+        bodyInfo.setSayCount(Integer.parseInt(tokenizer.nextToken()));
 
-	}
+    }
 
     private boolean isClosestToBall(double my_distance, double teammate_distance) {
         return my_distance < teammate_distance;
@@ -150,7 +156,7 @@ public class Brain extends Thread implements SensorInput {
         }
         m_krislet.turn_neck(-90);
         m_memory.waitForNewInfo();
-        return new Pair<>((PlayerInfo)null, 0);
+        return new Pair<>((PlayerInfo) null, 0);
     }
 
     private double calculatePower(float teammate_distance, BallInfo ball) {
@@ -167,11 +173,11 @@ public class Brain extends Thread implements SensorInput {
         m_memory.store(info);
     }
 
-    public void save(double score, boolean used){
-    	m_memory.setScore(score);
-    	m_memory.setUsed(used);
-		System.out.println("Score: " + score + " Used: " + used);
-	}
+    public void save(double score, boolean used) {
+        m_memory.setScore(score);
+        m_memory.setUsed(used);
+        System.out.println("Score: " + score + " Used: " + used);
+    }
 
 
     //---------------------------------------------------------------------------
@@ -184,80 +190,78 @@ public class Brain extends Thread implements SensorInput {
     // This function receives hear information from referee
     public void hear(int time, String message) {
 
-		System.out.println(message);
+        //System.out.println(message);
 
-		StringTokenizer tokenizer = new StringTokenizer(message,"() ", true);
-		String token;
+        StringTokenizer tokenizer = new StringTokenizer(message, "() ", true);
+        String token;
 
-		// First is referee token and time token
-		token = tokenizer.nextToken();
+        // First is referee token and time token
+        token = tokenizer.nextToken();
 
-		//set states
-		if(token.contains("goal_l_")){
-			setGameState(States.gameState.GOAL_L);
-		}
-		else if (token.contains("goal_r_")){
-			setGameState(States.gameState.GOAL_R);
-		}
-		else {
-			switch (token) {
-				case "time_over":
-					m_timeOver = true;
-					break;
-				case "kick_off_l":
-					gameState = States.gameState.KICKOFF_L;
-					break;
-				case "kick_off_r":
-					gameState = States.gameState.KICKOFF_R;
-					break;
-				case "play_on":
-					gameState = States.gameState.PLAY_ON;
-					break;
-				case "kick_in_l":
-					gameState = States.gameState.KICK_IN_L;
-					break;
-				case "kick_in_r":
-					gameState = States.gameState.KICK_IN_R;
-					break;
-				case "corner_kick_l":
-					gameState = States.gameState.CORNER_KICK_L;
-					break;
-				case "corner_kick_r":
-					gameState = States.gameState.CORNER_KICK_R;
-					break;
-				case "goal_kick_l":
-					gameState = States.gameState.GOAL_KICK_L;
-					break;
-				case "goal_kick_r":
-					gameState = States.gameState.GOAL_KICK_R;
-					break;
-				case "foul_charge_l":
-					gameState = States.gameState.FOUL_CHARGE_L;
-					break;
-				case "foul_charge_r":
-					gameState = States.gameState.FOUL_CHARGE_R;
-					break;
-				case "back_pass_l":
-					gameState = States.gameState.BACK_PASS_L;
-					break;
-				case "back_pass_r":
-					gameState = States.gameState.BACK_PASS_R;
-					break;
-				case "indirect_free_kick_l":
-					gameState = States.gameState.INDIRECT_FREE_KICK_L;
-					break;
-				case "indirect_free_kick_r":
-					gameState = States.gameState.INDIRECT_FREE_KICK_R;
-					break;
-				case "illegal_defense_l":
-					gameState = States.gameState.ILLEGAL_DEFENSE_L;
-					break;
-				case "illegal_defense_r":
-					gameState = States.gameState.ILLEGAL_DEFENSE_R;
-					break;
-			}
-		}
-	}
+        //set states
+        if (token.contains("goal_l_")) {
+            setGameState(States.gameState.GOAL_L);
+        } else if (token.contains("goal_r_")) {
+            setGameState(States.gameState.GOAL_R);
+        } else {
+            switch (token) {
+                case "time_over":
+                    m_timeOver = true;
+                    break;
+                case "kick_off_l":
+                    gameState = States.gameState.KICKOFF_L;
+                    break;
+                case "kick_off_r":
+                    gameState = States.gameState.KICKOFF_R;
+                    break;
+                case "play_on":
+                    gameState = States.gameState.PLAY_ON;
+                    break;
+                case "kick_in_l":
+                    gameState = States.gameState.KICK_IN_L;
+                    break;
+                case "kick_in_r":
+                    gameState = States.gameState.KICK_IN_R;
+                    break;
+                case "corner_kick_l":
+                    gameState = States.gameState.CORNER_KICK_L;
+                    break;
+                case "corner_kick_r":
+                    gameState = States.gameState.CORNER_KICK_R;
+                    break;
+                case "goal_kick_l":
+                    gameState = States.gameState.GOAL_KICK_L;
+                    break;
+                case "goal_kick_r":
+                    gameState = States.gameState.GOAL_KICK_R;
+                    break;
+                case "foul_charge_l":
+                    gameState = States.gameState.FOUL_CHARGE_L;
+                    break;
+                case "foul_charge_r":
+                    gameState = States.gameState.FOUL_CHARGE_R;
+                    break;
+                case "back_pass_l":
+                    gameState = States.gameState.BACK_PASS_L;
+                    break;
+                case "back_pass_r":
+                    gameState = States.gameState.BACK_PASS_R;
+                    break;
+                case "indirect_free_kick_l":
+                    gameState = States.gameState.INDIRECT_FREE_KICK_L;
+                    break;
+                case "indirect_free_kick_r":
+                    gameState = States.gameState.INDIRECT_FREE_KICK_R;
+                    break;
+                case "illegal_defense_l":
+                    gameState = States.gameState.ILLEGAL_DEFENSE_L;
+                    break;
+                case "illegal_defense_r":
+                    gameState = States.gameState.ILLEGAL_DEFENSE_R;
+                    break;
+            }
+        }
+    }
 
 
     //===========================================================================
