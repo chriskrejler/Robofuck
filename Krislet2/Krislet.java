@@ -154,6 +154,11 @@ class Krislet implements SendCommand
 		send("(move (" + object + ") " + x + " " + y + ")");
 	}
 
+	public void moveObject(String object, double x, double y, double vx, double vy){
+
+		send("(move (" + object + ") " + x + " " + y + " 0.0000 0.0000)");
+	}
+
 	public void signalEndOfGame(int type){
 		if(type == 1){
 			send("(change_mode play_on)");
@@ -164,7 +169,6 @@ class Krislet implements SendCommand
 
 	public void sendGameScore(double score){
 	    if(score <= 0){
-			System.out.println("Sending say score");
 	        send("(say score " + 0 + ")");
         }
         else {
@@ -221,6 +225,7 @@ class Krislet implements SendCommand
 		//check for 'ok listen'
 		if(message.charAt(1) == 'o' && message.charAt(2) == 'k' && message.charAt(4) == 'l'){
 			VisualInfo info = new VisualInfo(message);
+			System.out.println(message);
 			info.parse();
 			m_brain.see(info);
 		}

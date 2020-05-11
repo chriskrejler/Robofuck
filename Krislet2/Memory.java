@@ -43,7 +43,7 @@ class Memory
 		return null;
 	}
 
-	public List<PlayerInfo> getPlayerList(){
+	public ArrayList<PlayerInfo> getPlayerList(){
 		if( m_info == null ) {
 			waitForNewInfo();
 		}

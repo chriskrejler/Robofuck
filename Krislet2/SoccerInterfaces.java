@@ -17,6 +17,7 @@
 interface SendCommand
 {
 	void moveObject(String object, double x, double y);
+	void moveObject(String object, double x, double y, double vx, double vy);
 	public void signalEndOfGame(int type);
 	public void send(String string);
 	public void sendGameScore(double score);
