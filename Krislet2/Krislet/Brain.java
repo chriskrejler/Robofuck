@@ -61,9 +61,11 @@ public class Brain extends Thread implements SensorInput {
 					m_krislet.parseSensorInformation(m_krislet.receive());
 					if (gameState == States.gameState.KICK_IN_R && !m_memory.getUsed()) {
 						shots += m_memory.getScore();
+						m_memory.setUsed(true);
 						break;
 					} else if (gameState == States.gameState.KICK_IN_L && !m_memory.getUsed()) {
 						shots += m_memory.getScore();
+						m_memory.setUsed(true);
 						running = false;
 						break;
 					}

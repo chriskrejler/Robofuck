@@ -128,9 +128,7 @@ public class Krislet implements SendCommand
 		// first we need to initialize connection with server
 		init();
 
-		System.out.println("Hello");
 		m_socket.receive(packet);
-		System.out.println("Fuckface");
 		parseInitCommand(new String(buffer,0));
 		m_port = packet.getPort();
 
@@ -228,6 +226,7 @@ public class Krislet implements SendCommand
 	public void parseSensorInformation(String message)
 	{
 
+
 		// First check kind of information		
 		if( message.charAt(1) == 's' && message.charAt(3) == 'e')
 		{
@@ -240,6 +239,9 @@ public class Krislet implements SendCommand
 		}
 		if (message.charAt(1) == 's' && message.charAt(3) == 'n'){
 			m_brain.senseBody(message);
+		}
+		if (message.charAt(1) == 'S' && message.charAt(2) == 'c'){
+			parseHear(message);
 		}
 	}
 
@@ -256,14 +258,15 @@ public class Krislet implements SendCommand
 		tokenizer.nextToken();
 		time = Integer.parseInt( tokenizer.nextToken() );
 		sender = tokenizer.nextToken();
-		if( sender.compareTo("referee") == 0 )
-			m_brain.hear(time, tokenizer.nextToken());
-		else if(sender.compareTo("Score") == 0){
+
+		if(message.contains("score")){
 			tokenizer.nextToken();
 			m_brain.save(Double.parseDouble(tokenizer.nextToken()), false);
-		}
-		else if( sender.compareTo("self") != 0 )
+		} else if( sender.compareTo("referee") == 0 ) {
+			m_brain.hear(time, tokenizer.nextToken());
+		} else if( sender.compareTo("self") != 0 ) {
 			m_brain.hear(time, Integer.parseInt(sender), tokenizer.nextToken());
+		}
 	}
 
 
