@@ -32,7 +32,7 @@ public class Brain extends Thread implements SensorInput {
 
     public float run(Genome gene) {
         boolean running = true;
-        double shots = 0;
+        double score = 0;
         Pair<PlayerInfo, PlayerInfo> teammateEnemy;
         float[] inputs = new float[4];
         float[] outputs;
@@ -65,24 +65,24 @@ public class Brain extends Thread implements SensorInput {
                 while (true) {
                     m_krislet.parseSensorInformation(m_krislet.receive());
                     if (gameState == States.gameState.KICK_IN_R && !m_memory.getUsed()) {
-                        shots += m_memory.getScore();
-                        System.out.println("Successful pass registered!");
+                        score += m_memory.getScore();
+                        pass_succ++;
+                        System.out.println("Current successful passes: " + pass_succ + "\n");
                         m_memory.setUsed(true);
                         break;
                     } else if (gameState == States.gameState.KICK_IN_L && !m_memory.getUsed()) {
-                        shots += m_memory.getScore();
+                        score += m_memory.getScore();
+                        System.out.println("* Current successful passes: " + pass_succ + "\n");
                         m_memory.setUsed(true);
-                        System.out.println("Setting running to false");
                         running = false;
                         break;
                     } else if (gameState == States.gameState.BEFORE_KICKOFF) {
                         m_krislet.kick(outputs[0] * 100, angle);
                     }
                 }
-                System.out.println(shots);
             }
         }
-        return (float) shots;
+        return (float) score;
     }
 
 
@@ -271,6 +271,7 @@ public class Brain extends Thread implements SensorInput {
     public Memory m_memory;                // place where all information is stored
     private char m_side;
     volatile private boolean m_timeOver;
+    int pass_succ = 0;
     public Player player;
 }
 
