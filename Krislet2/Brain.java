@@ -109,15 +109,15 @@ class Brain extends Thread implements SensorInput {
             m_krislet.moveObject("ball", 0, 0);
         }
         endTick = m_memory.getTime() + 3;
-        PlayerInfo playerToBePassed = m_memory.getPlayer(team1, 2);
-        BallInfo ball = (BallInfo) m_memory.getObject("ball");
-        startDistance = distanceToBall(playerToBePassed, ball);
-        hasKicked = false;
         try {
             currentThread().sleep(100);
         } catch (Exception e) {
             System.out.println("cry");
         }
+        PlayerInfo playerToBePassed = m_memory.getPlayer(team1, 2);
+        BallInfo ball = (BallInfo) m_memory.getObject("ball");
+        startDistance = distanceToBall(playerToBePassed, ball);
+        hasKicked = false;
     }
 
     public void sleep() {
@@ -130,7 +130,7 @@ class Brain extends Thread implements SensorInput {
 
     public void sleep(int x) {
         try {
-            currentThread().sleep(x);
+            currentThread().sleep(100 * x);
         } catch (Exception e) {
             System.out.println("cry");
         }
@@ -161,6 +161,7 @@ class Brain extends Thread implements SensorInput {
                         Math.abs(ball.m_deltaY) <= 0.01)) {
             BallInfo currentBall = (BallInfo) m_memory.getObject("ball");
             double endDistance = distanceToBall(playerToBePassed, currentBall);
+            System.out.println("100 - ((" + endDistance + " / " + startDistance + ") * 100))");
             m_krislet.sendGameScore(100 - ((endDistance / startDistance) * 100));
             try {
                 currentThread().sleep(100);
@@ -179,7 +180,7 @@ class Brain extends Thread implements SensorInput {
             if (pass) {
                 passSituation(players);
                 m_krislet.send("(change_mode kick_in_r)");
-                System.out.println("goal r");
+                System.out.println("A successful pass!");
                 succesfulPasses += 1;
                 try {
                     currentThread().sleep(100);
@@ -196,9 +197,9 @@ class Brain extends Thread implements SensorInput {
                     System.out.println("cry");
                 }
                 //Send the amount of successful passes, and set game state to before_kick_off
-                m_krislet.signalEndOfGame(1);
                 //Reset ball and players
             }
+            m_krislet.signalEndOfGame(1);
         }
     }
 
