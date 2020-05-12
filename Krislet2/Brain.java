@@ -109,20 +109,17 @@ class Brain extends Thread implements SensorInput {
             m_krislet.moveObject("ball", 0, 0);
         }
         endTick = m_memory.getTime() + 3;
-        try {
-            currentThread().sleep(100);
-        } catch (Exception e) {
-            System.out.println("cry");
-        }
+        sleep();
         PlayerInfo playerToBePassed = m_memory.getPlayer(team1, 2);
         BallInfo ball = (BallInfo) m_memory.getObject("ball");
         startDistance = distanceToBall(playerToBePassed, ball);
         hasKicked = false;
+        sleep();
     }
 
     public void sleep() {
         try {
-            currentThread().sleep(100);
+            Thread.sleep(SoccerParams.simulator_step * 3);
         } catch (Exception e) {
             System.out.println("cry");
         }
@@ -130,7 +127,7 @@ class Brain extends Thread implements SensorInput {
 
     public void sleep(int x) {
         try {
-            currentThread().sleep(100 * x);
+            Thread.sleep(SoccerParams.simulator_step * x);
         } catch (Exception e) {
             System.out.println("cry");
         }
@@ -140,12 +137,14 @@ class Brain extends Thread implements SensorInput {
         //check if a pass was successful or not
         PlayerInfo playerToBePassed = m_memory.getPlayer(team1, 2);
 
-        double getOvertimeLimit = m_memory.getTime() + 10;
+        double getOvertimeLimit = m_memory.getTime() + 100;
 
         while (!hasKicked) {
             if (ball.m_deltaY > 0 || ball.m_deltaX > 0) {
                 hasKicked = true;
             } else if (m_memory.getTime() > getOvertimeLimit) {
+                System.out.println("Current tick: " + m_memory.getTime() + " OvertimeTick: " + getOvertimeLimit);
+                hasKicked = true;
                 m_krislet.signalEndOfGame(1);
             }
             ball = m_memory.getObject("ball");
@@ -163,11 +162,7 @@ class Brain extends Thread implements SensorInput {
             double endDistance = distanceToBall(playerToBePassed, currentBall);
             System.out.println("100 - ((" + endDistance + " / " + startDistance + ") * 100))");
             m_krislet.sendGameScore(100 - ((endDistance / startDistance) * 100));
-            try {
-                currentThread().sleep(100);
-            } catch (Exception e) {
-                System.out.println("cry");
-            }
+            sleep();
             boolean pass = false;
             for (PlayerInfo player : players) {
                 if (player.getTeamNumber() != 1 && player.getTeamName().equals(team1)) {
@@ -182,23 +177,16 @@ class Brain extends Thread implements SensorInput {
                 m_krislet.send("(change_mode kick_in_r)");
                 System.out.println("A successful pass!");
                 succesfulPasses += 1;
-                try {
-                    currentThread().sleep(100);
-                } catch (Exception e) {
-                    System.out.println("cry");
-                }
+                sleep();
             } else {
                 passSituation(players);
                 m_krislet.send("(change_mode kick_in_l)");
                 //Wait for NEAT algorithm to mutate
-                try {
-                    currentThread().sleep(100);
-                } catch (Exception e) {
-                    System.out.println("cry");
-                }
+                sleep();
                 //Send the amount of successful passes, and set game state to before_kick_off
                 //Reset ball and players
             }
+            System.out.println("First signal end");
             m_krislet.signalEndOfGame(1);
         }
     }

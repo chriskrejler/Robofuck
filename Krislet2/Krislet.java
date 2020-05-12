@@ -162,6 +162,7 @@ class Krislet implements SendCommand
 
 	public void signalEndOfGame(int type){
 		if(type == 1){
+			System.out.println("Sending change mode 1");
 			send("(change_mode play_on)");
 		}else {
 			send("(change_mode play_on)");
