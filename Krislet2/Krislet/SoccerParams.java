@@ -6,6 +6,6 @@ package Krislet;//
 
 class SoccerParams 
 {
-	final static int	simulator_step = 2;
+	final static int	simulator_step = 4;
 }
 

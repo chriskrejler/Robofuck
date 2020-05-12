@@ -135,8 +135,8 @@ public class Krislet implements SendCommand
 		// Now we should be connected to the server
 		// and we know side, player number and play mode
 		new Player((Brain)m_brain);
-		while( true )
-			parseSensorInformation(receive());
+		//while( true )
+		parseSensorInformation(receive());
 	}
 
 

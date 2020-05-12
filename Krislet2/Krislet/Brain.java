@@ -56,10 +56,9 @@ public class Brain extends Thread implements SensorInput {
                 System.out.println("Angle: " + outputs[0] + " Power: " + outputs[1]);
 
                 float angle = 0;
-                if (outputs[1] <= 0.5f) {
-                    angle = -(90 - (angle * 90));
-                } else {
-                    angle = (outputs[1] - 0.5f) * 180;
+                angle = outputs[1] * 180;
+                if (angle < 180) {
+                    angle = -(90 - angle);
                 }
                 m_krislet.kick(outputs[0] * 100, angle);
 
@@ -67,11 +66,13 @@ public class Brain extends Thread implements SensorInput {
                     m_krislet.parseSensorInformation(m_krislet.receive());
                     if (gameState == States.gameState.KICK_IN_R && !m_memory.getUsed()) {
                         shots += m_memory.getScore();
+                        System.out.println("Successful pass registered!");
                         m_memory.setUsed(true);
                         break;
                     } else if (gameState == States.gameState.KICK_IN_L && !m_memory.getUsed()) {
                         shots += m_memory.getScore();
                         m_memory.setUsed(true);
+                        System.out.println("Setting running to false");
                         running = false;
                         break;
                     } else if (gameState == States.gameState.BEFORE_KICKOFF) {
