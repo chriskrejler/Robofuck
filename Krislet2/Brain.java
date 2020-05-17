@@ -144,7 +144,7 @@ class Brain extends Thread implements SensorInput {
                 hasKicked = true;
             } else if (m_memory.getTime() > getOvertimeLimit) {
                 System.out.println("Current tick: " + m_memory.getTime() + " OvertimeTick: " + getOvertimeLimit);
-                hasKicked = true;
+                hasKicked = false;
                 m_krislet.signalEndOfGame(1);
             }
             ball = m_memory.getObject("ball");
